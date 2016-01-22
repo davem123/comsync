@@ -4,45 +4,39 @@
 #define false 0
 #define true  1
 
-
-#include "board.h"		// ATXMega_A1-Xplained board description
+// ATXMega_A1-Xplained board description
+#include "board.h"
 
 // Include Clock system driver from application note AVR1003
 #include "clksys_driver.h"
 
-
+// ===========================================================
 // Global variables
+// ===========================================================
 volatile uint8_t usart_buff0;
 volatile uint8_t usart_buff1;
 
-
-
-
-//------------ Timers ----------------------------------------
+// ===========================================================
+// Timers
+// ===========================================================
 #define Time0_vect	TCC0_OVF_vect
 #define TIMER0		TCC0
 
-
-//-----------------------------------------------------------------
-//--------------- USART
+// ===========================================================
+// USART
+// ===========================================================
 #define USART			USARTC0		//use for USB-Virtual COM Port
 #define USART_PORT		PORTC		//use for USB-Virtual COM Port
 //#define USART			USARTF0		//use for J1 Header
 //#define USART_PORT		PORTF	//use for J1 Header
 #define BSCALE_VALUE  4
 #define BSEL_VALUE   12	//prescalers for 32MHz clock to get 9600 baudrate 
-//...................... end of USART -----------------------------
-//-----------------------------------------------------------------
 
 
-
-
-
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-//&&&&&&&&&&&&&&&& INITIALIZATION FUNCTIONS &&&&&&&&&&&&&&&&&&&&&&&
-
-//------------------------------------------------------------
-//------------------ SYSTEM CLOCK ----------------------------
+// ============= INITIALIZATION FUNCTIONS ====================
+// ===========================================================
+// SYSTEM CLOCK
+// ===========================================================
 void ConfigureSystemClock(void)
 {
 	CLKSYS_Enable( OSC_RC32MEN_bm );						// Enable internal 32 MHz ring oscillator
@@ -53,14 +47,12 @@ void ConfigureSystemClock(void)
 
 	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );	// Set the 32 MHz ring oscillator as the main clock source.
 	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );		// Disable the other oscillators.
-}
-//...................... end of SYSTEM CLOCK -----------------
-//------------------------------------------------------------
+}//end of ConfigureSystemClock()
 
 
-
-//-------------------------------------------------------------
-//----------------------- USART -------------------------------
+// ===========================================================
+// USART
+// ===========================================================
 void USART_init(void)
 {
 	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
@@ -79,16 +71,12 @@ void USART_init(void)
 	// Enable both RX and TX
 	USART.CTRLB |= USART_RXEN_bm;
 	USART.CTRLB |= USART_TXEN_bm;
-}
-//...................... end of USART -------------------------
-//-------------------------------------------------------------
+}//end of USART_init()
 
 
-
-
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//@@@@@@@@@@@@ INTERRUPT HANDLERS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+// ===========================================================
+// INTERRUPT HANDLERS
+// ===========================================================
 ISR(Time0_vect) // TIMER0 overflow
 {
 	// first - disable Timer
@@ -102,12 +90,11 @@ ISR(Time0_vect) // TIMER0 overflow
 
 	//TODO 3: restart timer
 
-}
+}//end of ISR()
 
-
-
-//==================================================================
-//============= MAIN FUNCTION ======================================
+// ===========================================================
+// MAIN FUNCTION
+// ===========================================================
 int main( void )
 {
 	//local variables
@@ -168,8 +155,6 @@ int main( void )
 		TIMER0.CTRLFSET = TC_CMD_RESTART_gc;//restart
 
 
-	}
-}
-//.............. end of MAIN FUNCTION ==============================
-//==================================================================
+	}//end of while() loop
+}//end of main()
 
