@@ -111,6 +111,16 @@ void delay1ms(uint16_t ms) {
 }//end of delay1ms()
 
 // ===========================================================
+// firepulse() pulse triggering function
+// ===========================================================
+void firepulse(double pulse_length_us){
+	PORTD.OUT = 0x01;
+	// TODO: Use a different method to get <1us pulses
+	_delay_us(1);
+	PORTD.OUT = 0x00;
+}//end of firepulse()
+
+// ===========================================================
 // MAIN FUNCTION
 // ===========================================================
 int main( void )
@@ -150,7 +160,7 @@ int main( void )
         rec_char = USART.DATA;
 
 		//test - LED output
-		LEDPORT.OUT = ~(rec_char); 
+		LEDPORT.OUT = ~(rec_char);
 
 		//TODO: Add Timer/Counter Update
 		usart_buff0 = 0;
