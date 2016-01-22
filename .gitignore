@@ -7,3 +7,4 @@
 *.eep
 *.o.d
 default/prog.bat
+*.o

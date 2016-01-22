@@ -4,11 +4,17 @@
 #define false 0
 #define true  1
 
+// Set CPU frequency = 32MHz
+#define F_CPU 32.0E6
+
 // ATXMega_A1-Xplained board description
 #include "board.h"
 
 // Include Clock system driver from application note AVR1003
 #include "clksys_driver.h"
+
+// Include avr-gcc delay routines
+#include <util/delay.h>
 
 // ===========================================================
 // Global variables
@@ -93,6 +99,18 @@ ISR(Time0_vect) // TIMER0 overflow
 }//end of ISR()
 
 // ===========================================================
+// delay1ms() 1ms delay function
+// ===========================================================
+// this wrapper function calls _delay_ms with a known value of 1
+// if you call _delay_ms(variable) then the floating point library
+// is going to be included and your output file gets much larger
+// source: http://efundies.com/accurate-delays-with-avr-in-c/
+void delay1ms(uint16_t ms) {
+    uint16_t i;
+    for(i=0;i<ms;i++) _delay_ms(1);
+}//end of delay1ms()
+
+// ===========================================================
 // MAIN FUNCTION
 // ===========================================================
 int main( void )
@@ -100,21 +118,15 @@ int main( void )
 	//local variables
 	uint8_t rec_char;
 
-
-
 	//Variable initialization
-
-
 
 	//Configure DIOs
 
 	PORTD.DIR = 0xFF; // all outputs
 	PORTD.OUT = 0;
 
-
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
-
 
 	//Configure System Clock
 	ConfigureSystemClock(); //32 MHz
@@ -122,25 +134,23 @@ int main( void )
 	//Initialize USART
 	USART_init();
 
-
 	//Interrupts: enable medium interrupt levels in PMIC and enable global interrupts.
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
-	sei();	//global interrupt enable
-
-
+	
+	//Global interrupt enable
+	sei();
 
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
 		//check USART
-       // Wait until the data is received
+		// Wait until the data is received
         while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
 		// Read out the received data
         rec_char = USART.DATA;
 
 		//test - LED output
 		LEDPORT.OUT = ~(rec_char); 
-
 
 		//TODO: Add Timer/Counter Update
 		usart_buff0 = 0;
@@ -149,12 +159,13 @@ int main( void )
 		TIMER0.PERH = usart_buff1;
 		TIMER0.PERL = usart_buff0;
 
-
-		TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;  // Start Timer with 1 prescaling
-		TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;		//enable overflow interrupt level high
-		TIMER0.CTRLFSET = TC_CMD_RESTART_gc;//restart
+		// Start Timer0 with 1 prescaling
+		TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+		// Enable Timer0 overflow interrupt level high
+		TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
+		// Restart Timer0
+		TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 
 	}//end of while() loop
 }//end of main()
-
