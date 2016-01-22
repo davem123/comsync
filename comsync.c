@@ -25,8 +25,8 @@ volatile uint8_t usart_buff1;
 // ===========================================================
 // Timers
 // ===========================================================
-#define Time0_vect	TCC0_OVF_vect
-#define TIMER0		TCC0
+#define Timer0_vect		TCC0_OVF_vect
+#define TIMER0			TCC0
 
 // ===========================================================
 // USART
@@ -38,6 +38,10 @@ volatile uint8_t usart_buff1;
 #define BSCALE_VALUE  4
 #define BSEL_VALUE   12	//prescalers for 32MHz clock to get 9600 baudrate 
 
+// ===========================================================
+// General purpose I/O
+// ===========================================================
+#define PULSEPORT PORTD.OUT
 
 // ============= INITIALIZATION FUNCTIONS ====================
 // ===========================================================
@@ -79,24 +83,24 @@ void USART_init(void)
 	USART.CTRLB |= USART_TXEN_bm;
 }//end of USART_init()
 
-
 // ===========================================================
-// INTERRUPT HANDLERS
+// Timer0 Initialization
 // ===========================================================
-ISR(Time0_vect) // TIMER0 overflow
+void Timer0_init(void)
 {
-	// first - disable Timer
-	TIMER0.CTRLA = 0;
+	TIMER0.PERL = 0xFF;
+	TIMER0.PERH = 0xFF;
 
-	//TODO 1: "fire" a pulse on PORTD.0
+	// Start Timer0 with Clk/1 prescaling
+	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
+	// Enable overflow interrupt level high
+	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
-	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
+	// Restart Timer0
+	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
-
-	//TODO 3: restart timer
-
-}//end of ISR()
+}//end of Timer0_init()
 
 // ===========================================================
 // delay1ms() 1ms delay function
@@ -114,11 +118,31 @@ void delay1ms(uint16_t ms) {
 // firepulse() pulse triggering function
 // ===========================================================
 void firepulse(double pulse_length_us){
-	PORTD.OUT = 0x01;
-	// TODO: Use a different method to get <1us pulses
-	_delay_us(1);
-	PORTD.OUT = 0x00;
+	PULSEPORT = 0x01;
+	// TODO: Use a different method to get <30us pulses
+	_delay_us(pulse_length_us);
+	PULSEPORT = 0x00;
 }//end of firepulse()
+
+// ===========================================================
+// INTERRUPT HANDLERS
+// ===========================================================
+ISR(Timer0_vect) // TIMER0 overflow
+{
+	// Disable Timer0 while handling the interrupt
+	TIMER0.CTRLA = 0;
+
+	// Fire a pulse on PORTD.0
+	firepulse(50);
+
+	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
+	//TIMER0.PERL = 0xFF;
+	//TIMER0.PERH = 0xFF;
+
+	// Restart Timer0
+	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+
+}//end of ISR()
 
 // ===========================================================
 // MAIN FUNCTION
@@ -150,6 +174,9 @@ int main( void )
 	//Global interrupt enable
 	sei();
 
+	// Initialize Timer0
+	Timer0_init();
+
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
@@ -163,19 +190,11 @@ int main( void )
 		LEDPORT.OUT = ~(rec_char);
 
 		//TODO: Add Timer/Counter Update
-		usart_buff0 = 0;
-		usart_buff1 = rec_char;
+		//usart_buff0 = 0;
+		//usart_buff1 = rec_char;
 
-		TIMER0.PERH = usart_buff1;
-		TIMER0.PERL = usart_buff0;
-
-		// Start Timer0 with 1 prescaling
-		TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
-		// Enable Timer0 overflow interrupt level high
-		TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
-		// Restart Timer0
-		TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
-
+		//TIMER0.PERH = usart_buff1;
+		//TIMER0.PERL = usart_buff0;
 
 	}//end of while() loop
 }//end of main()
