@@ -1,10 +1,1 @@
-*.o
-*.map
-*.lss
-*.hex
-*.map
-*.elf
-*.eep
-*.o.d
-default/prog.bat
-default/comsync.o
+default/
