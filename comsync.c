@@ -5,7 +5,9 @@
 #define true  1
 
 // Set CPU frequency = 32MHz
-#define F_CPU 32.0E6
+#ifndef F_CPU
+	#define F_CPU 32.0E6
+#endif
 
 // ATXMega_A1-Xplained board description
 #include "board.h"
@@ -19,8 +21,8 @@
 // ===========================================================
 // Global variables
 // ===========================================================
-volatile uint8_t usart_buff0;
-volatile uint8_t usart_buff1;
+volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
+volatile uint8_t usart_counter = 0;
 
 // ===========================================================
 // Timers
@@ -59,6 +61,17 @@ void ConfigureSystemClock(void)
 	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );		// Disable the other oscillators.
 }//end of ConfigureSystemClock()
 
+// ===========================================================
+// delay1ms() 1ms delay function
+// ===========================================================
+// this wrapper function calls _delay_ms with a known value of 1
+// if you call _delay_ms(variable) then the floating point library
+// is going to be included and your output file gets much larger
+// source: http://efundies.com/accurate-delays-with-avr-in-c/
+void delay1ms(uint16_t ms) {
+    uint16_t i;
+    for(i=0;i<ms;i++) _delay_ms(1);
+}//end of delay1ms()
 
 // ===========================================================
 // USART
@@ -83,6 +96,33 @@ void USART_init(void)
 	USART.CTRLB |= USART_TXEN_bm;
 }//end of USART_init()
 
+void usart_parsebuffer(void){
+	usart_counter = 0;
+
+	switch (usart_buffer[0]) {
+
+		//TODO:Implement all of these commands
+		case 'T':
+			break;
+		case 'C':
+			break;
+		case '?':
+			break;
+		case 'X':
+			break;
+		default:
+			//flash the LEDs
+			for (uint8_t i=0; i<10; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
+			break;
+	}//end of switch statement
+
+}//end of usart_parsebuffer()
+
 // ===========================================================
 // Timer0 Initialization
 // ===========================================================
@@ -101,18 +141,6 @@ void Timer0_init(void)
 	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0_init()
-
-// ===========================================================
-// delay1ms() 1ms delay function
-// ===========================================================
-// this wrapper function calls _delay_ms with a known value of 1
-// if you call _delay_ms(variable) then the floating point library
-// is going to be included and your output file gets much larger
-// source: http://efundies.com/accurate-delays-with-avr-in-c/
-void delay1ms(uint16_t ms) {
-    uint16_t i;
-    for(i=0;i<ms;i++) _delay_ms(1);
-}//end of delay1ms()
 
 // ===========================================================
 // firepulse() pulse triggering function
@@ -183,11 +211,19 @@ int main( void )
 		//check USART
 		// Wait until the data is received
         while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
-		// Read out the received data
-        rec_char = USART.DATA;
+		rec_char = USART.DATA;
 
-		//test - LED output
+		// Display the received byte on the LEDs
 		LEDPORT.OUT = ~(rec_char);
+
+		// Read out the received data
+        if (rec_char == 0x0d) {
+			usart_parsebuffer();
+		}
+		else {
+			usart_buffer[usart_counter] = rec_char;
+			usart_counter++;
+		}//end of usart if/else
 
 		//TODO: Add Timer/Counter Update
 		//usart_buff0 = 0;

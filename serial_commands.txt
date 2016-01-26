@@ -1,0 +1,24 @@
+General command format: "[command],[parameter1],[parameterN]<CR>"
+
+Command List
+------------
+
+T: Triggered pulse train
+	Parameters: Number of pulses, pulse length (microseconds), delay after triggering (microseconds)
+	
+	Example of command for single 3us pulse, 10us after the trigger:
+	"T,1,3,10"
+
+C: Continuous pulses forever
+	Parameters: Number of pulses, pulse length (microseconds), time between pulses (microseconds)
+	
+	Example of command for a train of five 3us pulses, 100us apart:
+	"C,5,3,100"
+
+?: Return information about the current status
+
+X: Stop all pulse output immediately
+	Parameters: none
+	Example: "X"
+
+<CR>: Finished sending data. Process command.
