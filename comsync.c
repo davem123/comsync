@@ -33,10 +33,14 @@ volatile uint8_t usart_counter = 0;
 // ===========================================================
 // USART
 // ===========================================================
-#define USART			USARTC0		//use for USB-Virtual COM Port
-#define USART_PORT		PORTC		//use for USB-Virtual COM Port
-//#define USART			USARTF0		//use for J1 Header
-//#define USART_PORT		PORTF	//use for J1 Header
+#define USART			USARTC0				//use for USB-Virtual COM Port
+#define USART_PORT		PORTC				//use for USB-Virtual COM Port
+#define USART_VECT		USARTC0_RXC_vect	//use for USB-Virtual COM Port
+
+//#define USART			USARTF0				//use for J1 Header
+//#define USART_PORT	PORTF				//use for J1 Header
+//#define USART_VECT		USARTF0_RXC_vect	//use for USB-Virtual COM Port
+
 #define BSCALE_VALUE  4
 #define BSEL_VALUE   12	//prescalers for 32MHz clock to get 9600 baudrate 
 
@@ -76,8 +80,19 @@ void delay1ms(uint16_t ms) {
 // ===========================================================
 // USART
 // ===========================================================
+
+//Function prototypes
+void usart_rxbyte(uint8_t);
+void usart_parsebuffer(void);
+
+// ===========================================================
+// USART Initialization
+// ===========================================================
 void USART_init(void)
 {
+	// Global interrupts should be disabled during USART initialization
+	cli();
+
 	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
 	USART_PORT.DIRCLR   = PIN2_bm;   // Pin 2 (RX) as input.
 
@@ -89,13 +104,45 @@ void USART_init(void)
 	USART.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | USART_CMODE_ASYNCHRONOUS_gc;
 
 	USART.BAUDCTRLA = BSEL_VALUE;	
-	USART.BAUDCTRLB = BSCALE_VALUE << 4;	
+	USART.BAUDCTRLB = BSCALE_VALUE << 4;
+
+	// Set receive complete interrupt level
+	USART.CTRLA = USART_RXCINTLVL_LO_gc;
 
 	// Enable both RX and TX
 	USART.CTRLB |= USART_RXEN_bm;
 	USART.CTRLB |= USART_TXEN_bm;
+
+	// Re-enable global interrupts
+	sei();
+
 }//end of USART_init()
 
+// ===========================================================
+// usart_rxbyte() puts the received byte in the global variable
+// usart_buffer[] and calls the processing function if a
+// carriage return (0x0D) is received.
+// ===========================================================
+void usart_rxbyte(uint8_t rxbyte) {
+
+		// Display the received byte on the LEDs
+		LEDPORT.OUT = ~(rxbyte);
+
+		// Read out the received data
+        if (rxbyte == 0x0d) {
+			usart_parsebuffer();
+		}
+		else {
+			usart_buffer[usart_counter] = rxbyte;
+			usart_counter++;
+		}//end of usart if/else
+
+}//end of usart_rxbyte()
+
+// ===========================================================
+// usart_parsebuffer() processes the commands received on the
+// USART and initiates the requested action.
+// ===========================================================
 void usart_parsebuffer(void){
 	usart_counter = 0;
 
@@ -170,7 +217,19 @@ ISR(Timer0_vect) // TIMER0 overflow
 	// Restart Timer0
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
-}//end of ISR()
+}//end of Timer0 ISR
+
+ISR(USART_VECT){
+
+	uint8_t rec_char;
+
+	// Wait until the data is received
+	while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
+
+	rec_char = USART.DATA;
+	usart_rxbyte(rec_char);
+
+}//end of USART RX ISR
 
 // ===========================================================
 // MAIN FUNCTION
@@ -178,7 +237,6 @@ ISR(Timer0_vect) // TIMER0 overflow
 int main( void )
 {
 	//local variables
-	uint8_t rec_char;
 
 	//Variable initialization
 
@@ -193,11 +251,11 @@ int main( void )
 	//Configure System Clock
 	ConfigureSystemClock(); //32 MHz
 
-	//Initialize USART
-	USART_init();
-
-	//Interrupts: enable medium interrupt levels in PMIC and enable global interrupts.
+	//Interrupts: enable high interrupt levels in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
+	
+	//Interrupts: enable low interrupt levels in PMIC
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	
 	//Global interrupt enable
 	sei();
@@ -205,32 +263,12 @@ int main( void )
 	// Initialize Timer0
 	Timer0_init();
 
+	//Initialize USART
+	USART_init();
+
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
-		//check USART
-		// Wait until the data is received
-        while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
-		rec_char = USART.DATA;
-
-		// Display the received byte on the LEDs
-		LEDPORT.OUT = ~(rec_char);
-
-		// Read out the received data
-        if (rec_char == 0x0d) {
-			usart_parsebuffer();
-		}
-		else {
-			usart_buffer[usart_counter] = rec_char;
-			usart_counter++;
-		}//end of usart if/else
-
-		//TODO: Add Timer/Counter Update
-		//usart_buff0 = 0;
-		//usart_buff1 = rec_char;
-
-		//TIMER0.PERH = usart_buff1;
-		//TIMER0.PERL = usart_buff0;
-
 	}//end of while() loop
+
 }//end of main()
