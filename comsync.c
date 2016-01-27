@@ -27,7 +27,7 @@ volatile uint8_t usart_counter = 0;
 // ===========================================================
 // Timers
 // ===========================================================
-#define Timer0_vect		TCC0_OVF_vect
+#define TIMER0_VECT		TCC0_OVF_vect
 #define TIMER0			TCC0
 
 // ===========================================================
@@ -53,7 +53,7 @@ volatile uint8_t usart_counter = 0;
 // ===========================================================
 // SYSTEM CLOCK
 // ===========================================================
-void ConfigureSystemClock(void)
+void configure_system_clock(void)
 {
 	CLKSYS_Enable( OSC_RC32MEN_bm );						// Enable internal 32 MHz ring oscillator
 	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );	// ... and wait until it's stable
@@ -88,7 +88,7 @@ void usart_parsebuffer(void);
 // ===========================================================
 // USART Initialization
 // ===========================================================
-void USART_init(void)
+void usart_init(void)
 {
 	// Global interrupts should be disabled during USART initialization
 	cli();
@@ -125,11 +125,15 @@ void USART_init(void)
 // ===========================================================
 void usart_rxbyte(uint8_t rxbyte) {
 
+		// Echo the received byte back on the TX pin
+		USART.DATA = rxbyte;
+
 		// Display the received byte on the LEDs
 		LEDPORT.OUT = ~(rxbyte);
 
 		// Read out the received data
         if (rxbyte == 0x0d) {
+			USART.DATA = 0x0a;
 			usart_parsebuffer();
 		}
 		else {
@@ -173,7 +177,7 @@ void usart_parsebuffer(void){
 // ===========================================================
 // Timer0 Initialization
 // ===========================================================
-void Timer0_init(void)
+void timer0_init(void)
 {
 	TIMER0.PERL = 0xFF;
 	TIMER0.PERH = 0xFF;
@@ -202,7 +206,7 @@ void firepulse(double pulse_length_us){
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(Timer0_vect) // TIMER0 overflow
+ISR(TIMER0_VECT) // TIMER0 overflow
 {
 	// Disable Timer0 while handling the interrupt
 	TIMER0.CTRLA = 0;
@@ -234,7 +238,7 @@ ISR(USART_VECT){
 // ===========================================================
 // MAIN FUNCTION
 // ===========================================================
-int main( void )
+int main(void)
 {
 	//local variables
 
@@ -249,7 +253,7 @@ int main( void )
 	LEDPORT.OUT = 0xFF; //Default off for LED
 
 	//Configure System Clock
-	ConfigureSystemClock(); //32 MHz
+	configure_system_clock(); //32 MHz
 
 	//Interrupts: enable high interrupt levels in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
@@ -261,10 +265,10 @@ int main( void )
 	sei();
 
 	// Initialize Timer0
-	Timer0_init();
+	timer0_init();
 
 	//Initialize USART
-	USART_init();
+	usart_init();
 
 	//Infinite Loop - waiting for USART commands
 	while (1)
