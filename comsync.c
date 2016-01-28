@@ -24,6 +24,10 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
+volatile uint8_t pulse_count;
+volatile uint16_t pulse_length;
+volatile uint16_t pulse_delay;
+
 // ===========================================================
 // Timers
 // ===========================================================
@@ -84,6 +88,7 @@ void delay1ms(uint16_t ms) {
 //Function prototypes
 void usart_rxbyte(uint8_t);
 void usart_parsebuffer(void);
+void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
 
 // ===========================================================
 // USART Initialization
@@ -149,11 +154,13 @@ void usart_rxbyte(uint8_t rxbyte) {
 // ===========================================================
 void usart_parsebuffer(void){
 	usart_counter = 0;
+	unsigned char command = usart_buffer[0];
 
-	switch (usart_buffer[0]) {
+	switch (command) {
 
 		//TODO:Implement all of these commands
 		case 'T':
+			config_triggered_pulse(0,0,0);
 			break;
 		case 'C':
 			break;
@@ -196,12 +203,32 @@ void timer0_init(void)
 // ===========================================================
 // firepulse() pulse triggering function
 // ===========================================================
-void firepulse(double pulse_length_us){
-	PULSEPORT = 0x01;
-	// TODO: Use a different method to get <30us pulses
-	_delay_us(pulse_length_us);
-	PULSEPORT = 0x00;
+void firepulse(){
+
+	// Do nothing for the specified delay time
+	for (int i=0; i < pulse_delay; i++) asm("nop");
+
+	// Repeat the pulse the specified number of times
+	for (int j=0; j < pulse_count; j++){
+		
+		// Set the pulse pin high
+		PULSEPORT = 0x01;
+		
+		// Don't set it low until the specified pulse length has elapsed
+		for (int k=0; k < pulse_length; k++) asm("nop");
+		PULSEPORT = 0x00;
+	}//end of for loop
 }//end of firepulse()
+
+// ===========================================================
+// config_triggered_pulse() set the conditions for a train of
+// triggered pulses
+// ===========================================================
+void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
+	pulse_count = count;
+	pulse_length = length;
+	pulse_delay = delay;
+}//end of config_triggered_pulse()
 
 // ===========================================================
 // INTERRUPT HANDLERS
@@ -212,7 +239,7 @@ ISR(TIMER0_VECT) // TIMER0 overflow
 	TIMER0.CTRLA = 0;
 
 	// Fire a pulse on PORTD.0
-	firepulse(50);
+	firepulse();
 
 	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
 	//TIMER0.PERL = 0xFF;
