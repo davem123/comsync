@@ -33,6 +33,8 @@ volatile uint16_t pulse_delay;
 // ===========================================================
 #define TIMER0_VECT		TCC0_OVF_vect
 #define TIMER0			TCC0
+#define COUNTER1_VECT	TCC1_OVF_vect
+#define COUNTER1		TCC1
 
 // ===========================================================
 // USART
@@ -186,8 +188,8 @@ void usart_parsebuffer(void){
 // ===========================================================
 void timer0_init(void)
 {
-	TIMER0.PERL = 0xFF;
-	TIMER0.PERH = 0xFF;
+	TIMER0.PERL = 0x04;
+	TIMER0.PERH = 0x00;
 
 	// Start Timer0 with Clk/1 prescaling
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -199,6 +201,33 @@ void timer0_init(void)
 	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0_init()
+
+
+// ===========================================================
+// Counter1 Initialization
+// Counter1 will be used to count Timer0 overflows (i.e. pulses)
+// ===========================================================
+void counter1_init(void){
+
+	// Do something after 65535 (0xFFFF) events
+	COUNTER1.CNTL = 0xFF;
+	COUNTER1.CNTH = 0xFF;
+
+	//Set event channel 0 multiplexer to "Timer/Counter C0 over/underflow"
+	EVSYS.CH0MUX = ( EVSYS.CH0MUX & ~EVSYS_CHMUX_gm ) | EVSYS_CHMUX_TCC0_OVF_gc;
+
+	// Set COUNTER1 clock source to event channel 0
+	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
+
+	// Set event action to none.
+	COUNTER1.CTRLD = ( COUNTER1.CTRLD & ~TC1_EVACT_gm ) | TC_EVACT_OFF_gc;
+
+	// Enable overflow interrupt level high
+	COUNTER1.INTCTRLA = TC_OVFINTLVL_HI_gc;
+
+	// Restart COUNTER1
+	COUNTER1.CTRLFSET = TC_CMD_RESTART_gc;
+}
 
 // ===========================================================
 // firepulse() pulse triggering function
@@ -239,7 +268,8 @@ ISR(TIMER0_VECT) // TIMER0 overflow
 	TIMER0.CTRLA = 0;
 
 	// Fire a pulse on PORTD.0
-	firepulse();
+	PULSEPORT = 0x01;
+	PULSEPORT = 0x00;
 
 	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
 	//TIMER0.PERL = 0xFF;
@@ -249,6 +279,18 @@ ISR(TIMER0_VECT) // TIMER0 overflow
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 }//end of Timer0 ISR
+
+ISR(COUNTER1_VECT) // TIMER1 (counter) overflow
+{
+	// Disable Counter1 while handling the interrupt
+	COUNTER1.CTRLA = 0;
+	
+	USART.DATA = '!';
+
+	// Restart Counter1
+	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
+
+}//end of Counter1 ISR
 
 ISR(USART_VECT){
 
@@ -294,12 +336,15 @@ int main(void)
 	// Initialize Timer0
 	timer0_init();
 
+	// Initialize Counter1
+	counter1_init();
+
 	//Initialize USART
 	usart_init();
 
 	//Infinite Loop - waiting for USART commands
 	while (1)
-	{
+	{		
 	}//end of while() loop
 
 }//end of main()
