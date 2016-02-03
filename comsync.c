@@ -28,13 +28,16 @@ volatile uint8_t pulse_count;
 volatile uint16_t pulse_length;
 volatile uint16_t pulse_delay;
 
+volatile uint8_t capture_counter;
+
 // ===========================================================
 // Timers
 // ===========================================================
-#define TIMER0_VECT		TCC0_OVF_vect
-#define TIMER0			TCC0
-#define COUNTER1_VECT	TCC1_OVF_vect
-#define COUNTER1		TCC1
+#define TIMER0_OVF_VECT		TCC0_OVF_vect
+#define TIMER0				TCC0
+#define TIMER0_CCPA_VECT	TCC0_CCA_vect
+
+//#define COUNTER1		TCC1
 
 // ===========================================================
 // USART
@@ -188,14 +191,14 @@ void usart_parsebuffer(void){
 // ===========================================================
 void timer0_init(void)
 {
-	TIMER0.PERL = 0x04;
+	TIMER0.PERL = 0x01;
 	TIMER0.PERH = 0x00;
 
 	// Start Timer0 with Clk/1 prescaling
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Enable overflow interrupt level high
-	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	TIMER0.INTCTRLA = TC_OVFINTLVL_LO_gc;
 
 	// Restart Timer0
 	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
@@ -204,14 +207,33 @@ void timer0_init(void)
 
 
 // ===========================================================
+// Timer0 Compare initialization
+// ===========================================================
+void timer0_ccp_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCAL = 0xFF;
+	TIMER0.CCAH = 0xEE;
+
+	//Enable compare channel A interrupt level high
+	TIMER0.INTCTRLB = TC_CCAINTLVL_HI_gc;
+
+	// Enable capture/compare channel A
+	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCAEN_bm);
+
+}
+
+// ===========================================================
 // Counter1 Initialization
 // Counter1 will be used to count Timer0 overflows (i.e. pulses)
 // ===========================================================
+/*
 void counter1_init(void){
 
-	// Do something after 65535 (0xFFFF) events
-	COUNTER1.CNTL = 0xFF;
-	COUNTER1.CNTH = 0xFF;
+	// Do something after events
+	COUNTER1.PERL = 0x05;
+	COUNTER1.PERH = 0x00;
 
 	//Set event channel 0 multiplexer to "Timer/Counter C0 over/underflow"
 	EVSYS.CH0MUX = ( EVSYS.CH0MUX & ~EVSYS_CHMUX_gm ) | EVSYS_CHMUX_TCC0_OVF_gc;
@@ -228,6 +250,7 @@ void counter1_init(void){
 	// Restart COUNTER1
 	COUNTER1.CTRLFSET = TC_CMD_RESTART_gc;
 }
+*/
 
 // ===========================================================
 // firepulse() pulse triggering function
@@ -262,7 +285,7 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(TIMER0_VECT) // TIMER0 overflow
+ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
 	// Disable Timer0 while handling the interrupt
 	TIMER0.CTRLA = 0;
@@ -275,22 +298,21 @@ ISR(TIMER0_VECT) // TIMER0 overflow
 	//TIMER0.PERL = 0xFF;
 	//TIMER0.PERH = 0xFF;
 
-	// Restart Timer0
+	// Re-enable Timer0
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+
+	// Restart Timer0
+	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0 ISR
 
-ISR(COUNTER1_VECT) // TIMER1 (counter) overflow
+
+ISR(TIMER0_CCPA_VECT) // TIMER0 compare channel A value reached
 {
-	// Disable Counter1 while handling the interrupt
-	COUNTER1.CTRLA = 0;
 	
-	USART.DATA = '!';
+	USART.DATA = 0x21;
 
-	// Restart Counter1
-	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
-
-}//end of Counter1 ISR
+}//end of Timer0 CCPA ISR
 
 ISR(USART_VECT){
 
@@ -309,11 +331,11 @@ ISR(USART_VECT){
 // ===========================================================
 int main(void)
 {
-	//local variables
 
-	//Variable initialization
+	// Disable all interrupts while initializing
+	cli();
 
-	//Configure DIOs
+	// Configure DIOs
 
 	PORTD.DIR = 0xFF; // all outputs
 	PORTD.OUT = 0;
@@ -329,22 +351,24 @@ int main(void)
 	
 	//Interrupts: enable low interrupt levels in PMIC
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	
-	//Global interrupt enable
-	sei();
 
 	// Initialize Timer0
 	timer0_init();
+	timer0_ccp_init();
 
 	// Initialize Counter1
-	counter1_init();
+	//counter1_init();
 
 	//Initialize USART
 	usart_init();
 
+	// Enable global interrupts once all the setup is done
+	sei();
+
 	//Infinite Loop - waiting for USART commands
 	while (1)
-	{		
+	{
+		delay1ms(100);
 	}//end of while() loop
 
 }//end of main()
