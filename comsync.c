@@ -102,9 +102,6 @@ void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
 // ===========================================================
 void usart_init(void)
 {
-	// Global interrupts should be disabled during USART initialization
-	//cli();
-
 	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
 	USART_PORT.DIRCLR   = PIN2_bm;   // Pin 2 (RX) as input.
 
@@ -124,9 +121,6 @@ void usart_init(void)
 	// Enable both RX and TX
 	USART.CTRLB |= USART_RXEN_bm;
 	USART.CTRLB |= USART_TXEN_bm;
-
-	// Re-enable global interrupts
-	//sei();
 
 }//end of USART_init()
 
@@ -202,34 +196,9 @@ void timer0_init(void)
 	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 	// Restart Timer0
-	TIMER0.CTRLC = 0x00;
 	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0_init()
-
-// ===========================================================
-// Timer1 Initialization
-// ===========================================================
-/*
-void timer1_init(void)
-{
-	TIMER1.PERL = 0xFF;
-	TIMER1.PERH = 0x00;
-
-	// Start Timer1 with Clk/1 prescaling
-	TIMER1.CTRLA = ( TIMER1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
-
-	// Clear interrupt flags before enabling interrupts
-	//TIMER1.INTFLAGS = 0x00;
-
-	// Enable overflow interrupt level low
-	TIMER1.INTCTRLA = TC_OVFINTLVL_LO_gc;
-
-	// Restart Timer1
-	TIMER1.CTRLFSET = TC_CMD_RESTART_gc;
-
-}//end of Timer1_init()
-*/
 
 // ===========================================================
 // CompareA initialization (tau1)
@@ -245,10 +214,7 @@ void ccpa_init(void) {
 	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
 
 	//Enable compare channel A interrupt level high
-	//TIMER0.INTCTRLB = TC_CCAINTLVL_HI_gc;
 	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
-
-	// Enable overflow interrupt level high
 
 }
 
@@ -259,7 +225,7 @@ void ccpb_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCBL = 0x02;
+	TIMER0.CCBL = 0x01;
 	TIMER0.CCBH = 0x00;
 
 	// Enable capture/compare channel A
@@ -277,8 +243,8 @@ void ccpc_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCCL = 0x04;
-	TIMER0.CCCH = 0x00;
+	TIMER0.CCCL = 0xFF;
+	TIMER0.CCCH = 0x1F;
 
 	// Enable capture/compare channel C
 	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
@@ -287,34 +253,6 @@ void ccpc_init(void) {
 	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
 
 }
-
-// ===========================================================
-// Counter1 Initialization
-// Counter1 will be used to count Timer0 overflows (i.e. pulses)
-// ===========================================================
-/*
-void counter1_init(void){
-
-	// Do something after events
-	COUNTER1.PERL = 0xAA;
-	COUNTER1.PERH = 0x00;
-
-	//Set event channel 0 multiplexer to "Timer/Counter C0 over/underflow"
-	EVSYS.CH0MUX = ( EVSYS.CH0MUX & ~EVSYS_CHMUX_gm ) | EVSYS_CHMUX_TCC0_OVF_gc;
-
-	// Set COUNTER1 clock source to event channel 0
-	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
-
-	// Set event action to none.
-	COUNTER1.CTRLD = ( COUNTER1.CTRLD & ~TC1_EVACT_gm ) | TC_EVACT_OFF_gc;
-
-	// Enable overflow interrupt level high
-	COUNTER1.INTCTRLA = TC_OVFINTLVL_HI_gc;
-
-	// Restart COUNTER1
-	COUNTER1.CTRLFSET = TC_CMD_RESTART_gc;
-}
-*/
 
 // ===========================================================
 // firepulse() pulse triggering function
@@ -351,37 +289,36 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 // ===========================================================
 ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
-	// Disable Timer0 while handling the interrupt
-	//TIMER0.CTRLA = 0;
 
-	PORTD.OUTTGL=0x08;
-
-	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
-	//TIMER0.PERL = 0xFF;
-	//TIMER0.PERH = 0xFF;
-
-	// Re-enable Timer0
-	//TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
-
-	// Restart Timer0
-	//TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
+	PORTD.OUTTGL = 0x08;
 
 }//end of Timer0 ISR
 
 
 ISR(CCPA_VECT) // CompareA interrupt vector
 {
-	PORTD.OUTTGL = 0x04;
+	PORTD.OUT |=(1<<2);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<2);
+
 }//end of CompareA ISR
 
 ISR(CCPB_VECT) // CompareB interrupt vector
 {
-	PORTD.OUTTGL = 0x02;
+
+	PORTD.OUT |=(1<<1);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<1);
+
 }//end of CompareB ISR
 
 ISR(CCPC_VECT) // CompareC interrupt vector
 {
-	PORTD.OUTTGL = 0x01;
+
+	PORTD.OUT |=(1<<0);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<0);
+
 }//end of CompareC ISR
 
 
@@ -409,7 +346,7 @@ int main(void)
 	// Configure DIOs
 
 	PORTD.DIR = 0xFF; // all outputs
-	PORTD.OUT = 0;
+	PORTD.OUT = 0x00;
 
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
