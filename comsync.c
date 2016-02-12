@@ -6,7 +6,7 @@
 
 // Set CPU frequency = 32MHz
 #ifndef F_CPU
-	#define F_CPU 32.0E6
+	#define F_CPU 32000000UL
 #endif
 
 // ATXMega_A1-Xplained board description
@@ -24,20 +24,22 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
-volatile uint8_t pulse_count;
+volatile uint8_t pulse_count = 0;
 volatile uint16_t pulse_length;
 volatile uint16_t pulse_delay;
 
-volatile uint8_t capture_counter;
+volatile uint8_t ccpa;
+volatile uint8_t ccpb;
+volatile uint8_t ccpc;
 
 // ===========================================================
 // Timers
 // ===========================================================
 #define TIMER0_OVF_VECT		TCC0_OVF_vect
 #define TIMER0				TCC0
-#define TIMER0_CCPA_VECT	TCC0_CCA_vect
-
-//#define COUNTER1		TCC1
+#define CCPA_VECT		TCC0_CCA_vect
+#define CCPB_VECT		TCC0_CCB_vect
+#define CCPC_VECT		TCC0_CCC_vect
 
 // ===========================================================
 // USART
@@ -101,7 +103,7 @@ void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
 void usart_init(void)
 {
 	// Global interrupts should be disabled during USART initialization
-	cli();
+	//cli();
 
 	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
 	USART_PORT.DIRCLR   = PIN2_bm;   // Pin 2 (RX) as input.
@@ -124,7 +126,7 @@ void usart_init(void)
 	USART.CTRLB |= USART_TXEN_bm;
 
 	// Re-enable global interrupts
-	sei();
+	//sei();
 
 }//end of USART_init()
 
@@ -165,7 +167,6 @@ void usart_parsebuffer(void){
 
 		//TODO:Implement all of these commands
 		case 'T':
-			config_triggered_pulse(0,0,0);
 			break;
 		case 'C':
 			break;
@@ -191,36 +192,99 @@ void usart_parsebuffer(void){
 // ===========================================================
 void timer0_init(void)
 {
-	TIMER0.PERL = 0x01;
-	TIMER0.PERH = 0x00;
+	TIMER0.PERL = 0xFF;
+	TIMER0.PERH = 0xFF;
 
 	// Start Timer0 with Clk/1 prescaling
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Enable overflow interrupt level high
-	TIMER0.INTCTRLA = TC_OVFINTLVL_LO_gc;
+	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 	// Restart Timer0
+	TIMER0.CTRLC = 0x00;
 	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0_init()
 
+// ===========================================================
+// Timer1 Initialization
+// ===========================================================
+/*
+void timer1_init(void)
+{
+	TIMER1.PERL = 0xFF;
+	TIMER1.PERH = 0x00;
+
+	// Start Timer1 with Clk/1 prescaling
+	TIMER1.CTRLA = ( TIMER1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+
+	// Clear interrupt flags before enabling interrupts
+	//TIMER1.INTFLAGS = 0x00;
+
+	// Enable overflow interrupt level low
+	TIMER1.INTCTRLA = TC_OVFINTLVL_LO_gc;
+
+	// Restart Timer1
+	TIMER1.CTRLFSET = TC_CMD_RESTART_gc;
+
+}//end of Timer1_init()
+*/
 
 // ===========================================================
-// Timer0 Compare initialization
+// CompareA initialization (tau1)
 // ===========================================================
-void timer0_ccp_init(void) {
+void ccpa_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCAL = 0xFF;
-	TIMER0.CCAH = 0xEE;
-
-	//Enable compare channel A interrupt level high
-	TIMER0.INTCTRLB = TC_CCAINTLVL_HI_gc;
+	TIMER0.CCAL = 0x01;
+	TIMER0.CCAH = 0x00;
 
 	// Enable capture/compare channel A
-	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCAEN_bm);
+	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
+
+	//Enable compare channel A interrupt level high
+	//TIMER0.INTCTRLB = TC_CCAINTLVL_HI_gc;
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+
+	// Enable overflow interrupt level high
+
+}
+
+// ===========================================================
+// CompareB initialization (tau2)
+// ===========================================================
+void ccpb_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCBL = 0x02;
+	TIMER0.CCBH = 0x00;
+
+	// Enable capture/compare channel A
+	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCBEN_bm);
+
+	//Enable compare channel B interrupt level medium
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
+
+}
+
+// ===========================================================
+// CompareC initialization (tau3)
+// ===========================================================
+void ccpc_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCCL = 0x04;
+	TIMER0.CCCH = 0x00;
+
+	// Enable capture/compare channel C
+	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
+
+	//Enable compare channel C interrupt level low
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
 
 }
 
@@ -232,7 +296,7 @@ void timer0_ccp_init(void) {
 void counter1_init(void){
 
 	// Do something after events
-	COUNTER1.PERL = 0x05;
+	COUNTER1.PERL = 0xAA;
 	COUNTER1.PERH = 0x00;
 
 	//Set event channel 0 multiplexer to "Timer/Counter C0 over/underflow"
@@ -288,31 +352,38 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
 	// Disable Timer0 while handling the interrupt
-	TIMER0.CTRLA = 0;
+	//TIMER0.CTRLA = 0;
 
-	// Fire a pulse on PORTD.0
-	PULSEPORT = 0x01;
-	PULSEPORT = 0x00;
+	PORTD.OUTTGL=0x08;
 
 	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
 	//TIMER0.PERL = 0xFF;
 	//TIMER0.PERH = 0xFF;
 
 	// Re-enable Timer0
-	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	//TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Restart Timer0
-	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
+	//TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of Timer0 ISR
 
 
-ISR(TIMER0_CCPA_VECT) // TIMER0 compare channel A value reached
+ISR(CCPA_VECT) // CompareA interrupt vector
 {
-	
-	USART.DATA = 0x21;
+	PORTD.OUTTGL = 0x04;
+}//end of CompareA ISR
 
-}//end of Timer0 CCPA ISR
+ISR(CCPB_VECT) // CompareB interrupt vector
+{
+	PORTD.OUTTGL = 0x02;
+}//end of CompareB ISR
+
+ISR(CCPC_VECT) // CompareC interrupt vector
+{
+	PORTD.OUTTGL = 0x01;
+}//end of CompareC ISR
+
 
 ISR(USART_VECT){
 
@@ -346,21 +417,24 @@ int main(void)
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
-	//Interrupts: enable high interrupt levels in PMIC
-	PMIC.CTRL |= PMIC_HILVLEN_bm;
-	
-	//Interrupts: enable low interrupt levels in PMIC
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 
 	// Initialize Timer0
 	timer0_init();
-	timer0_ccp_init();
-
-	// Initialize Counter1
-	//counter1_init();
+	ccpa_init();
+	ccpb_init();
+	ccpc_init();
 
 	//Initialize USART
 	usart_init();
+
+	//Interrupts: enable high priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_HILVLEN_bm;
+	
+	//Interrupts: enable medium priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_MEDLVLEN_bm;
+
+	//Interrupts: enable low priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 
 	// Enable global interrupts once all the setup is done
 	sei();
@@ -368,7 +442,6 @@ int main(void)
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
-		delay1ms(100);
 	}//end of while() loop
 
 }//end of main()
