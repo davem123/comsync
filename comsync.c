@@ -6,7 +6,7 @@
 
 // Set CPU frequency = 32MHz
 #ifndef F_CPU
-	#define F_CPU 32.0E6
+	#define F_CPU 32000000UL
 #endif
 
 // ATXMega_A1-Xplained board description
@@ -24,11 +24,22 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
+volatile uint8_t pulse_count = 0;
+volatile uint16_t pulse_length;
+volatile uint16_t pulse_delay;
+
+volatile uint8_t ccpa;
+volatile uint8_t ccpb;
+volatile uint8_t ccpc;
+
 // ===========================================================
 // Timers
 // ===========================================================
-#define TIMER0_VECT		TCC0_OVF_vect
-#define TIMER0			TCC0
+#define TIMER0_OVF_VECT		TCC0_OVF_vect
+#define TIMER0				TCC0
+#define CCPA_VECT		TCC0_CCA_vect
+#define CCPB_VECT		TCC0_CCB_vect
+#define CCPC_VECT		TCC0_CCC_vect
 
 // ===========================================================
 // USART
@@ -84,15 +95,13 @@ void delay1ms(uint16_t ms) {
 //Function prototypes
 void usart_rxbyte(uint8_t);
 void usart_parsebuffer(void);
+void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
 
 // ===========================================================
 // USART Initialization
 // ===========================================================
 void usart_init(void)
 {
-	// Global interrupts should be disabled during USART initialization
-	cli();
-
 	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
 	USART_PORT.DIRCLR   = PIN2_bm;   // Pin 2 (RX) as input.
 
@@ -112,9 +121,6 @@ void usart_init(void)
 	// Enable both RX and TX
 	USART.CTRLB |= USART_RXEN_bm;
 	USART.CTRLB |= USART_TXEN_bm;
-
-	// Re-enable global interrupts
-	sei();
 
 }//end of USART_init()
 
@@ -149,8 +155,9 @@ void usart_rxbyte(uint8_t rxbyte) {
 // ===========================================================
 void usart_parsebuffer(void){
 	usart_counter = 0;
+	unsigned char command = usart_buffer[0];
 
-	switch (usart_buffer[0]) {
+	switch (command) {
 
 		//TODO:Implement all of these commands
 		case 'T':
@@ -194,34 +201,126 @@ void timer0_init(void)
 }//end of Timer0_init()
 
 // ===========================================================
+// CompareA initialization (tau1)
+// ===========================================================
+void ccpa_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCAL = 0x01;
+	TIMER0.CCAH = 0x00;
+
+	// Enable capture/compare channel A
+	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
+
+	//Enable compare channel A interrupt level high
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+
+}
+
+// ===========================================================
+// CompareB initialization (tau2)
+// ===========================================================
+void ccpb_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCBL = 0x01;
+	TIMER0.CCBH = 0x00;
+
+	// Enable capture/compare channel A
+	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCBEN_bm);
+
+	//Enable compare channel B interrupt level medium
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
+
+}
+
+// ===========================================================
+// CompareC initialization (tau3)
+// ===========================================================
+void ccpc_init(void) {
+	
+	// Set compare value
+	// TODO: dynamically reconfigure this as per user input
+	TIMER0.CCCL = 0xFF;
+	TIMER0.CCCH = 0x1F;
+
+	// Enable capture/compare channel C
+	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
+
+	//Enable compare channel C interrupt level low
+	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
+
+}
+
+// ===========================================================
 // firepulse() pulse triggering function
 // ===========================================================
-void firepulse(double pulse_length_us){
-	PULSEPORT = 0x01;
-	// TODO: Use a different method to get <30us pulses
-	_delay_us(pulse_length_us);
-	PULSEPORT = 0x00;
+void firepulse(){
+
+	// Do nothing for the specified delay time
+	for (int i=0; i < pulse_delay; i++) asm("nop");
+
+	// Repeat the pulse the specified number of times
+	for (int j=0; j < pulse_count; j++){
+		
+		// Set the pulse pin high
+		PULSEPORT = 0x01;
+		
+		// Don't set it low until the specified pulse length has elapsed
+		for (int k=0; k < pulse_length; k++) asm("nop");
+		PULSEPORT = 0x00;
+	}//end of for loop
 }//end of firepulse()
+
+// ===========================================================
+// config_triggered_pulse() set the conditions for a train of
+// triggered pulses
+// ===========================================================
+void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
+	pulse_count = count;
+	pulse_length = length;
+	pulse_delay = delay;
+}//end of config_triggered_pulse()
 
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(TIMER0_VECT) // TIMER0 overflow
+ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
-	// Disable Timer0 while handling the interrupt
-	TIMER0.CTRLA = 0;
 
-	// Fire a pulse on PORTD.0
-	firepulse(50);
-
-	//TODO 2: update TIMER0.PERL and TIMER0.PERH with right values
-	//TIMER0.PERL = 0xFF;
-	//TIMER0.PERH = 0xFF;
-
-	// Restart Timer0
-	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	PORTD.OUTTGL = 0x08;
 
 }//end of Timer0 ISR
+
+
+ISR(CCPA_VECT) // CompareA interrupt vector
+{
+	PORTD.OUT |=(1<<2);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<2);
+
+}//end of CompareA ISR
+
+ISR(CCPB_VECT) // CompareB interrupt vector
+{
+
+	PORTD.OUT |=(1<<1);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<1);
+
+}//end of CompareB ISR
+
+ISR(CCPC_VECT) // CompareC interrupt vector
+{
+
+	PORTD.OUT |=(1<<0);
+	delay1ms(1);
+	PORTD.OUT &=~(1<<0);
+
+}//end of CompareC ISR
+
 
 ISR(USART_VECT){
 
@@ -240,14 +339,14 @@ ISR(USART_VECT){
 // ===========================================================
 int main(void)
 {
-	//local variables
 
-	//Variable initialization
+	// Disable all interrupts while initializing
+	cli();
 
-	//Configure DIOs
+	// Configure DIOs
 
 	PORTD.DIR = 0xFF; // all outputs
-	PORTD.OUT = 0;
+	PORTD.OUT = 0x00;
 
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
@@ -255,20 +354,27 @@ int main(void)
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
-	//Interrupts: enable high interrupt levels in PMIC
-	PMIC.CTRL |= PMIC_HILVLEN_bm;
-	
-	//Interrupts: enable low interrupt levels in PMIC
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	
-	//Global interrupt enable
-	sei();
 
 	// Initialize Timer0
 	timer0_init();
+	ccpa_init();
+	ccpb_init();
+	ccpc_init();
 
 	//Initialize USART
 	usart_init();
+
+	//Interrupts: enable high priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_HILVLEN_bm;
+	
+	//Interrupts: enable medium priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_MEDLVLEN_bm;
+
+	//Interrupts: enable low priority interrupts in PMIC
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+
+	// Enable global interrupts once all the setup is done
+	sei();
 
 	//Infinite Loop - waiting for USART commands
 	while (1)
