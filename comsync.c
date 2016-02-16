@@ -1,6 +1,8 @@
 #include <avr/io.h> 
 #include <avr/interrupt.h>
 
+#define DEBUG
+
 #define false 0
 #define true  1
 
@@ -37,9 +39,12 @@ volatile uint8_t ccpc;
 // ===========================================================
 #define TIMER0_OVF_VECT		TCC0_OVF_vect
 #define TIMER0				TCC0
-#define CCPA_VECT		TCC0_CCA_vect
-#define CCPB_VECT		TCC0_CCB_vect
-#define CCPC_VECT		TCC0_CCC_vect
+#define CCPA_VECT			TCC0_CCA_vect
+#define CCPB_VECT			TCC0_CCB_vect
+#define CCPC_VECT			TCC0_CCC_vect
+
+#define CLOCK1				TCD0
+#define CLOCK1_VECT			TCD0_OVF_vect
 
 // ===========================================================
 // USART
@@ -186,8 +191,7 @@ void usart_parsebuffer(void){
 // ===========================================================
 void timer0_init(void)
 {
-	TIMER0.PERL = 0xFF;
-	TIMER0.PERH = 0xFF;
+	TIMER0.PER = 0xFFFF;
 
 	// Start Timer0 with Clk/1 prescaling
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -207,8 +211,7 @@ void ccpa_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCAL = 0x01;
-	TIMER0.CCAH = 0x00;
+	TIMER0.CCA = 0x0001;
 
 	// Enable capture/compare channel A
 	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
@@ -225,8 +228,7 @@ void ccpb_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCBL = 0x01;
-	TIMER0.CCBH = 0x00;
+	TIMER0.CCB = 0x0001;
 
 	// Enable capture/compare channel A
 	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCBEN_bm);
@@ -243,8 +245,7 @@ void ccpc_init(void) {
 	
 	// Set compare value
 	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCCL = 0xFF;
-	TIMER0.CCCH = 0x1F;
+	TIMER0.CCC = 0x00FF;
 
 	// Enable capture/compare channel C
 	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
@@ -252,6 +253,37 @@ void ccpc_init(void) {
 	//Enable compare channel C interrupt level low
 	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
 
+}
+
+// ===========================================================
+// Clock1 (first pulse) single-shot timer initialization
+// Uses a timer in single-slope PWM generation mode
+// ===========================================================
+void clock1_init(void) {
+
+	// PER controls the PWM period
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK1.PER = 0x000A;
+
+	// CCA controls the PWM duty cycle
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK1.CCA = 0x0001;
+
+	// Start CLOCK1 with Clk/1 prescaling
+	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK1.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope waveform generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN = 1.
+	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+
+	// Enable overflow interrupt level high
+	CLOCK1.INTCTRLA = TC_OVFINTLVL_HI_gc;
+
+	// Restart CLOCK1
+	CLOCK1.CTRLFSET = TC_CMD_RESTART_gc;
 }
 
 // ===========================================================
@@ -294,7 +326,6 @@ ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 
 }//end of Timer0 ISR
 
-
 ISR(CCPA_VECT) // CompareA interrupt vector
 {
 	PORTD.OUT |=(1<<2);
@@ -320,7 +351,6 @@ ISR(CCPC_VECT) // CompareC interrupt vector
 	PORTD.OUT &=~(1<<0);
 
 }//end of CompareC ISR
-
 
 ISR(USART_VECT){
 
@@ -356,10 +386,12 @@ int main(void)
 
 
 	// Initialize Timer0
-	timer0_init();
-	ccpa_init();
-	ccpb_init();
-	ccpc_init();
+	//timer0_init();
+//	ccpa_init();
+//	ccpb_init();
+//	ccpc_init();
+
+	clock1_init();
 
 	//Initialize USART
 	usart_init();
@@ -379,6 +411,9 @@ int main(void)
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
+		#ifdef DEBUG
+			asm("nop");
+		#endif
 	}//end of while() loop
 
 }//end of main()
