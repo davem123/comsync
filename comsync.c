@@ -26,7 +26,7 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
-volatile uint8_t pulse_count = 0;
+volatile uint16_t pulse_count = 0;
 volatile uint16_t pulse_length;
 volatile uint16_t pulse_delay;
 
@@ -101,6 +101,7 @@ void delay1ms(uint16_t ms) {
 void usart_rxbyte(uint8_t);
 void usart_parsebuffer(void);
 void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
+void firepulse(void);
 
 // ===========================================================
 // USART Initialization
@@ -142,16 +143,20 @@ void usart_rxbyte(uint8_t rxbyte) {
 		// Display the received byte on the LEDs
 		LEDPORT.OUT = ~(rxbyte);
 
+		if (rxbyte == 'x' || rxbyte == 'X') {
+			firepulse();
+		}
+
 		// Read out the received data
-        if (rxbyte == 0x0d) {
+        /*if (rxbyte == 0x0d) {
 			USART.DATA = 0x0a;
 			usart_parsebuffer();
 		}
+		*/
 		else {
 			usart_buffer[usart_counter] = rxbyte;
 			usart_counter++;
 		}//end of usart if/else
-
 }//end of usart_rxbyte()
 
 // ===========================================================
@@ -257,17 +262,17 @@ void ccpc_init(void) {
 
 // ===========================================================
 // Clock1 (first pulse) single-shot timer initialization
-// Uses a timer in single-slope PWM generation mode
+// Uses a timer in dual-slope PWM generation mode
 // ===========================================================
 void clock1_init(void) {
 
 	// PER controls the PWM period
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.PER = 0x000A;
+	CLOCK1.PER = 0xFFFF;
 
 	// CCA controls the PWM duty cycle
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.CCA = 0x0001;
+	CLOCK1.CCA = 0x3FF0;
 
 	// Start CLOCK1 with Clk/1 prescaling
 	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -275,35 +280,18 @@ void clock1_init(void) {
 	// Disable event actions - required for waveform generation mode
 	CLOCK1.CTRLD &= TC_EVACT_OFF_gc;
 
-	// Enable single-slope waveform generation mode and capture/compare channel A
-	// Waveform generator overrides regular port OUT when CCAEN = 1.
-	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
-
-	// Enable overflow interrupt level high
-	CLOCK1.INTCTRLA = TC_OVFINTLVL_HI_gc;
-
-	// Restart CLOCK1
-	CLOCK1.CTRLFSET = TC_CMD_RESTART_gc;
+	// Enable dual-slope waveform generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_DS_B_gc | TC0_CCAEN_bm;
 }
 
 // ===========================================================
 // firepulse() pulse triggering function
 // ===========================================================
-void firepulse(){
+void firepulse(void){
 
-	// Do nothing for the specified delay time
-	for (int i=0; i < pulse_delay; i++) asm("nop");
+	CLOCK1.CNT = 0x3FFF;
 
-	// Repeat the pulse the specified number of times
-	for (int j=0; j < pulse_count; j++){
-		
-		// Set the pulse pin high
-		PULSEPORT = 0x01;
-		
-		// Don't set it low until the specified pulse length has elapsed
-		for (int k=0; k < pulse_length; k++) asm("nop");
-		PULSEPORT = 0x00;
-	}//end of for loop
 }//end of firepulse()
 
 // ===========================================================
@@ -321,17 +309,12 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 // ===========================================================
 ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
-
 	PORTD.OUTTGL = 0x08;
-
+	firepulse();
 }//end of Timer0 ISR
 
 ISR(CCPA_VECT) // CompareA interrupt vector
-{
-	PORTD.OUT |=(1<<2);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<2);
-
+{	
 }//end of CompareA ISR
 
 ISR(CCPB_VECT) // CompareB interrupt vector
@@ -353,11 +336,10 @@ ISR(CCPC_VECT) // CompareC interrupt vector
 }//end of CompareC ISR
 
 ISR(USART_VECT){
-
 	uint8_t rec_char;
 
 	// Wait until the data is received
-	while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
+	//while( !(USART.STATUS & USART_RXCIF_bm))
 
 	rec_char = USART.DATA;
 	usart_rxbyte(rec_char);
@@ -386,7 +368,7 @@ int main(void)
 
 
 	// Initialize Timer0
-	//timer0_init();
+	timer0_init();
 //	ccpa_init();
 //	ccpb_init();
 //	ccpc_init();
