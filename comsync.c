@@ -143,16 +143,12 @@ void usart_rxbyte(uint8_t rxbyte) {
 		// Display the received byte on the LEDs
 		LEDPORT.OUT = ~(rxbyte);
 
-		if (rxbyte == 'x' || rxbyte == 'X') {
-			firepulse();
-		}
-
 		// Read out the received data
-        /*if (rxbyte == 0x0d) {
+        if (rxbyte == 0x0d) {
 			USART.DATA = 0x0a;
 			usart_parsebuffer();
 		}
-		*/
+		
 		else {
 			usart_buffer[usart_counter] = rxbyte;
 			usart_counter++;
@@ -170,13 +166,38 @@ void usart_parsebuffer(void){
 	switch (command) {
 
 		//TODO:Implement all of these commands
-		case 'T':
+		case 'p':
+			CLOCK1.PERH = usart_buffer[1];
+			CLOCK1.PERL = usart_buffer[2];
+			//flash the LEDs twice
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
-		case 'C':
+		case 'c':
+			CLOCK1.CCAH = usart_buffer[1];
+			CLOCK1.CCAL = usart_buffer[2];
+			//flash the LEDs thrice
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
-		case '?':
-			break;
-		case 'X':
+		case 'n':
+			CLOCK1.CCAH = usart_buffer[1];
+			CLOCK1.CCAL = usart_buffer[2];
+			//flash the LEDs... frice?
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
 		default:
 			//flash the LEDs
@@ -196,7 +217,7 @@ void usart_parsebuffer(void){
 // ===========================================================
 void timer0_init(void)
 {
-	TIMER0.PER = 0xFFFF;
+	TIMER0.PER = 65535;
 
 	// Start Timer0 with Clk/1 prescaling
 	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -261,18 +282,36 @@ void ccpc_init(void) {
 }
 
 // ===========================================================
-// Clock1 (first pulse) single-shot timer initialization
-// Uses a timer in dual-slope PWM generation mode
+// Clock1 (first pulse) initialization
+// Uses a timer in single-slope waveform generation mode
+// to produce a single-shot pulse
+//
+// pulse width (cycles) = TOP - CCA
+// TOP = 65535 with a 16-bit timer.
+//
+// 1. Initialize timer with CCA > PER so that it counts up,
+// but never updates the output pin
+//
+// 2. When a pulse is desired, set CNT == CCA. Output is set immediately,
+// and cleared when CNT == TOP.
+//
+// As long as CCA > PER, only a single pulse will be fired.
+//
+// Measured delay before setting pin: 330ns
+//
+// Thanks to: http://wp.josh.com/2015/03/12/avr-timer-based-one-shot-explained/
 // ===========================================================
 void clock1_init(void) {
 
 	// PER controls the PWM period
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.PER = 0xFFFF;
+	CLOCK1.PER = 65500;
 
 	// CCA controls the PWM duty cycle
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.CCA = 0x3FF0;
+	CLOCK1.CCA = 65505;
+
+	PORTD.PIN0CTRL |= PORT_INVEN_bm;
 
 	// Start CLOCK1 with Clk/1 prescaling
 	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -280,17 +319,17 @@ void clock1_init(void) {
 	// Disable event actions - required for waveform generation mode
 	CLOCK1.CTRLD &= TC_EVACT_OFF_gc;
 
-	// Enable dual-slope waveform generation mode and capture/compare channel A
+	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
-	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_DS_B_gc | TC0_CCAEN_bm;
+	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
 }
 
 // ===========================================================
 // firepulse() pulse triggering function
 // ===========================================================
 void firepulse(void){
-
-	CLOCK1.CNT = 0x3FFF;
+	
+	//TODO: put something here or remove the function
 
 }//end of firepulse()
 
@@ -302,6 +341,9 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 	pulse_count = count;
 	pulse_length = length;
 	pulse_delay = delay;
+
+	//TODO: put something here or remove the function
+
 }//end of config_triggered_pulse()
 
 // ===========================================================
@@ -309,8 +351,6 @@ void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
 // ===========================================================
 ISR(TIMER0_OVF_VECT) // TIMER0 overflow
 {
-	PORTD.OUTTGL = 0x08;
-	firepulse();
 }//end of Timer0 ISR
 
 ISR(CCPA_VECT) // CompareA interrupt vector
@@ -341,8 +381,12 @@ ISR(USART_VECT){
 	// Wait until the data is received
 	//while( !(USART.STATUS & USART_RXCIF_bm))
 
+	//Reading the data clears the interrupt flag
 	rec_char = USART.DATA;
-	usart_rxbyte(rec_char);
+	//usart_rxbyte(rec_char);
+
+	PORTD.OUTTGL = 0x08;
+	CLOCK1.CNT = 65505;
 
 }//end of USART RX ISR
 
@@ -368,7 +412,7 @@ int main(void)
 
 
 	// Initialize Timer0
-	timer0_init();
+	//timer0_init();
 //	ccpa_init();
 //	ccpb_init();
 //	ccpc_init();
