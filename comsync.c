@@ -14,10 +14,10 @@
 #define F_CPU_MHZ (uint8_t) (F_CPU / 1.0E6)
 
 // ATXMega_A1-Xplained board description
-#include "board.h"
+#include "include/board.h"
 
 // Include Clock system driver from application note AVR1003
-#include "clksys_driver.h"
+#include "include/clksys_driver.h"
 
 // Include avr-gcc delay routines
 #include <util/delay.h>
@@ -466,7 +466,7 @@ int main(void)
 
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
-	
+
 	tau1_init();
 	tau2_init();
 	tau3_init();
@@ -484,6 +484,9 @@ int main(void)
 
 	//Initialize USART
 	usart_init();
+
+	
+	dma_init();
 
 	//Interrupts: enable high priority interrupts in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
