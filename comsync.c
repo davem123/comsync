@@ -28,19 +28,15 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
-volatile uint8_t ccpa;
-volatile uint8_t ccpb;
-volatile uint8_t ccpc;
-
 // ===========================================================
 // Timers
 // ===========================================================
-#define TIMER0_OVF_VECT		TCC0_OVF_vect
-#define TIMER0				TCC0
+#define MASTER_OVF_VECT		TCC0_OVF_vect
+#define MASTER				TCC0
 
-#define CCPA_VECT			TCC0_CCA_vect
-#define CCPB_VECT			TCC0_CCB_vect
-#define CCPC_VECT			TCC0_CCC_vect
+#define TAU1_VECT			TCC0_CCA_vect
+#define TAU2_VECT			TCC0_CCB_vect
+#define TAU3_VECT			TCC0_CCC_vect
 
 #define CLOCK1				TCD0
 #define CLOCK2				TCF0
@@ -214,68 +210,68 @@ void usart_parsebuffer(void){
 }//end of usart_parsebuffer()
 
 // ===========================================================
-// Timer0 Initialization
+// Master clock timer initialization
 // ===========================================================
-void timer0_init(void)
+void master_init(void)
 {
-	TIMER0.PER = 65535;
+	MASTER.PER = 65535;
 
-	// Start Timer0 with Clk/1 prescaling
-	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	// Start Timer with Clk/1 prescaling
+	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Enable overflow interrupt level high
-	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
-	// Restart Timer0
-	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
+	// Restart Timer
+	MASTER.CTRLFSET = TC_CMD_RESTART_gc;
 
-}//end of Timer0_init()
+}//end of master_init()
 
 // ===========================================================
 // CompareA initialization (tau1)
 // ===========================================================
-void ccpa_init(void) {
+void tau1_init(void) {
 	
 	// Set compare value
-	TIMER0.CCA = 0x0001;
+	MASTER.CCA = 0x0000;
 
 	// Enable capture/compare channel A
-	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
+	MASTER.CTRLB = MASTER.CTRLB | TC0_CCAEN_bm;
 
 	//Enable compare channel A interrupt level high
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
 
 }
 
 // ===========================================================
 // CompareB initialization (tau2)
 // ===========================================================
-void ccpb_init(void) {
+void tau2_init(void) {
 	
 	// Set compare value
-	TIMER0.CCB = 0x0001;
+	MASTER.CCB = 0x0000;
 
 	// Enable capture/compare channel A
-	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCBEN_bm);
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCBEN_bm);
 
 	//Enable compare channel B interrupt level medium
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
 
 }
 
 // ===========================================================
 // CompareC initialization (tau3)
 // ===========================================================
-void ccpc_init(void) {
+void tau3_init(void) {
 	
 	// Set compare value
-	TIMER0.CCC = 0x00FF;
+	MASTER.CCC = 0x0000;
 
 	// Enable capture/compare channel C
-	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
 
 	//Enable compare channel C interrupt level low
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
 
 }
 
@@ -319,8 +315,9 @@ void clock1_init(void) {
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
-}
+}//end of clock1_init()
 
+// Same as clock1
 void clock2_init(void) {
 
 	// PER controls the PWM period
@@ -341,7 +338,7 @@ void clock2_init(void) {
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK2.CTRLB = ( CLOCK2.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
-}
+}//end of clock2_init()
 
 // Same as clock1
 void clock3_init(void) {
@@ -364,7 +361,7 @@ void clock3_init(void) {
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
-}
+}//end of clock3_init()
 
 // ===========================================================
 // Update the PER and CCA registers of the specified clock's
@@ -409,36 +406,30 @@ void set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
 			break;
 		default:
 			break;
-	}
-}
+	}//end of switch(clocknumber)
+}//end of set_pulse_width()
 
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(TIMER0_OVF_VECT) // TIMER0 overflow
+ISR(MASTER_OVF_VECT) // MASTER overflow
 {
+	PORTD.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
-ISR(CCPA_VECT) // CompareA interrupt vector
-{	
+ISR(TAU1_VECT, ISR_NAKED) // CompareA interrupt vector
+{
+	CLOCK1.CNT = CLOCK1.CCA;
 }//end of CompareA ISR
 
-ISR(CCPB_VECT) // CompareB interrupt vector
+ISR(TAU2_VECT, ISR_NAKED) // CompareB interrupt vector
 {
-
-	PORTD.OUT |=(1<<1);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<1);
-
+	CLOCK2.CNT = CLOCK2.CCA;
 }//end of CompareB ISR
 
-ISR(CCPC_VECT) // CompareC interrupt vector
+ISR(TAU3_VECT, ISR_NAKED) // CompareC interrupt vector
 {
-
-	PORTD.OUT |=(1<<0);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<0);
-
+	CLOCK3.CNT = CLOCK3.CCA;
 }//end of CompareC ISR
 
 ISR(USART_VECT){
@@ -450,12 +441,7 @@ ISR(USART_VECT){
 	//Reading the data clears the interrupt flag
 	rec_char = USART.DATA;
 	//usart_rxbyte(rec_char);
-
-	PORTD.OUTTGL = 0x08;
-	CLOCK1.CNT = CLOCK1.CCA;
-	CLOCK2.CNT = CLOCK2.CCA;
-	CLOCK3.CNT = CLOCK3.CCA;
-
+	
 }//end of USART RX ISR
 
 // ===========================================================
@@ -480,13 +466,10 @@ int main(void)
 
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
-
-
-	// Initialize Timer0
-//	timer0_init();
-//	ccpa_init();
-//	ccpb_init();
-//	ccpc_init();
+	
+	tau1_init();
+	tau2_init();
+	tau3_init();
 
 	clock1_init();
 	clock2_init();
@@ -495,6 +478,9 @@ int main(void)
 	set_pulse_width(1,10);
 	set_pulse_width(2,20);
 	set_pulse_width(3,30);
+
+	// Initialize master clock
+	master_init();
 
 	//Initialize USART
 	usart_init();
