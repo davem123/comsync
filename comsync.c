@@ -26,10 +26,6 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
-volatile uint16_t pulse_count = 0;
-volatile uint16_t pulse_length;
-volatile uint16_t pulse_delay;
-
 volatile uint8_t ccpa;
 volatile uint8_t ccpb;
 volatile uint8_t ccpc;
@@ -44,7 +40,8 @@ volatile uint8_t ccpc;
 #define CCPC_VECT			TCC0_CCC_vect
 
 #define CLOCK1				TCD0
-#define CLOCK1_VECT			TCD0_OVF_vect
+#define CLOCK2				TCF0
+#define CLOCK3				TCF1
 
 // ===========================================================
 // USART
@@ -100,8 +97,6 @@ void delay1ms(uint16_t ms) {
 //Function prototypes
 void usart_rxbyte(uint8_t);
 void usart_parsebuffer(void);
-void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
-void firepulse(void);
 
 // ===========================================================
 // USART Initialization
@@ -305,11 +300,11 @@ void clock1_init(void) {
 
 	// PER controls the PWM period
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.PER = 65500;
+	CLOCK1.PER = 17534;
 
 	// CCA controls the PWM duty cycle
 	// TODO: dynamically reconfigure this as per user input
-	CLOCK1.CCA = 65505;
+	CLOCK1.CCA = 17535;
 
 	PORTD.PIN0CTRL |= PORT_INVEN_bm;
 
@@ -324,27 +319,52 @@ void clock1_init(void) {
 	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
 }
 
-// ===========================================================
-// firepulse() pulse triggering function
-// ===========================================================
-void firepulse(void){
+void clock2_init(void) {
+
+	// PER controls the PWM period
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK2.PER = 17534;
+
+	// CCA controls the PWM duty cycle
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK2.CCA = 17535;
+
+	PORTF.PIN0CTRL |= PORT_INVEN_bm;
+
+	// Start CLOCK2 with Clk/1 prescaling
+	CLOCK2.CTRLA = ( CLOCK2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 	
-	//TODO: put something here or remove the function
+	// Disable event actions - required for waveform generation mode
+	CLOCK2.CTRLD &= TC_EVACT_OFF_gc;
 
-}//end of firepulse()
+	// Enable single-slope generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK2.CTRLB = ( CLOCK2.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}
 
-// ===========================================================
-// config_triggered_pulse() set the conditions for a train of
-// triggered pulses
-// ===========================================================
-void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
-	pulse_count = count;
-	pulse_length = length;
-	pulse_delay = delay;
+// Same as clock1
+void clock3_init(void) {
 
-	//TODO: put something here or remove the function
+	// PER controls the PWM period
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK3.PER = 17534;
 
-}//end of config_triggered_pulse()
+	// CCA controls the PWM duty cycle
+	// TODO: dynamically reconfigure this as per user input
+	CLOCK3.CCA = 17535;
+
+	PORTF.PIN4CTRL |= PORT_INVEN_bm;
+
+	// Start CLOCK3 with Clk/1 prescaling
+	CLOCK3.CTRLA = ( CLOCK3.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK3.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}
 
 // ===========================================================
 // INTERRUPT HANDLERS
@@ -386,7 +406,9 @@ ISR(USART_VECT){
 	//usart_rxbyte(rec_char);
 
 	PORTD.OUTTGL = 0x08;
-	CLOCK1.CNT = 65505;
+	CLOCK1.CNT = 17535;
+	CLOCK2.CNT = 17535;
+	CLOCK3.CNT = 17535;
 
 }//end of USART RX ISR
 
@@ -407,17 +429,22 @@ int main(void)
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
 
+	PORTF.DIR = 0xFF;
+	PORTF.OUT = 0x00;
+
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
 
 	// Initialize Timer0
-	//timer0_init();
+//	timer0_init();
 //	ccpa_init();
 //	ccpb_init();
 //	ccpc_init();
 
 	clock1_init();
+	clock2_init();
+	clock3_init();
 
 	//Initialize USART
 	usart_init();
