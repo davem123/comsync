@@ -11,6 +11,8 @@
 	#define F_CPU 32000000UL
 #endif
 
+#define F_CPU_MHZ (uint8_t) (F_CPU / 1.0E6)
+
 // ATXMega_A1-Xplained board description
 #include "board.h"
 
@@ -35,6 +37,7 @@ volatile uint8_t ccpc;
 // ===========================================================
 #define TIMER0_OVF_VECT		TCC0_OVF_vect
 #define TIMER0				TCC0
+
 #define CCPA_VECT			TCC0_CCA_vect
 #define CCPB_VECT			TCC0_CCB_vect
 #define CCPC_VECT			TCC0_CCC_vect
@@ -42,6 +45,10 @@ volatile uint8_t ccpc;
 #define CLOCK1				TCD0
 #define CLOCK2				TCF0
 #define CLOCK3				TCF1
+
+#define CLOCK1PIN			PORTD.PIN0CTRL
+#define CLOCK2PIN			PORTF.PIN0CTRL
+#define CLOCK3PIN			PORTF.PIN4CTRL
 
 // ===========================================================
 // USART
@@ -295,12 +302,13 @@ void ccpc_init(void) {
 void clock1_init(void) {
 
 	// PER controls the PWM period
-	CLOCK1.PER = 17534;
+	CLOCK1.PER = 65534;
 
 	// CCA controls the PWM duty cycle
-	CLOCK1.CCA = 17535;
+	CLOCK1.CCA = 65535;
 
-	PORTD.PIN0CTRL |= PORT_INVEN_bm;
+	// Invert the output pin to get a positive pulse
+	CLOCK1PIN |= PORT_INVEN_bm;
 
 	// Start CLOCK1 with Clk/1 prescaling
 	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -316,12 +324,13 @@ void clock1_init(void) {
 void clock2_init(void) {
 
 	// PER controls the PWM period
-	CLOCK2.PER = 17534;
+	CLOCK2.PER = 65534;
 
 	// CCA controls the PWM duty cycle
-	CLOCK2.CCA = 17535;
+	CLOCK2.CCA = 65535;
 
-	PORTF.PIN0CTRL |= PORT_INVEN_bm;
+	// Invert the output pin to get a positive pulse
+	CLOCK2PIN |= PORT_INVEN_bm;
 
 	// Start CLOCK2 with Clk/1 prescaling
 	CLOCK2.CTRLA = ( CLOCK2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -338,12 +347,13 @@ void clock2_init(void) {
 void clock3_init(void) {
 
 	// PER controls the PWM period
-	CLOCK3.PER = 17534;
+	CLOCK3.PER = 65534;
 
 	// CCA controls the PWM duty cycle
-	CLOCK3.CCA = 17535;
+	CLOCK3.CCA = 65535;
 
-	PORTF.PIN4CTRL |= PORT_INVEN_bm;
+	// Invert the output pin to get a positive pulse
+	CLOCK3PIN |= PORT_INVEN_bm;
 
 	// Start CLOCK3 with Clk/1 prescaling
 	CLOCK3.CTRLA = ( CLOCK3.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -354,6 +364,52 @@ void clock3_init(void) {
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}
+
+// ===========================================================
+// Update the PER and CCA registers of the specified clock's
+// timer, to set the pulse width of the specified clock signal
+//
+// Parameters: (clock #, pulse width in microseconds)
+//
+// Example: set_pulse_width(1,350)
+// ===========================================================
+void set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
+
+	uint16_t pulse_width_us = pulse_width;
+
+	// For a 16-bit timer and 32MHz clock with Clk/1 prescaler:
+	// maximum pulse width (us) = (2^16 / F_CPU_MHZ) - 1 = 2047us
+
+	// Reduce too-wide pulses to the maximum width
+	if (pulse_width_us > 2047)
+		pulse_width_us = 2047;
+
+	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
+	// where timer_clock = F_CPU / prescaler
+	
+	uint16_t pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
+	
+	// pulse width (cycles) = TOP - CCA
+	uint16_t cca_value = (65535 - pulse_width_cycles);
+
+
+	switch (clocknumber) {
+		case 1:
+			CLOCK1.CCA = cca_value;
+			CLOCK1.PER = cca_value - 1;
+			break;
+		case 2:
+			CLOCK2.CCA = cca_value;
+			CLOCK2.PER = cca_value - 1;
+			break;
+		case 3:
+			CLOCK3.CCA = cca_value;
+			CLOCK3.PER = cca_value - 1;
+			break;
+		default:
+			break;
+	}
 }
 
 // ===========================================================
@@ -396,9 +452,9 @@ ISR(USART_VECT){
 	//usart_rxbyte(rec_char);
 
 	PORTD.OUTTGL = 0x08;
-	CLOCK1.CNT = 17535;
-	CLOCK2.CNT = 17535;
-	CLOCK3.CNT = 17535;
+	CLOCK1.CNT = CLOCK1.CCA;
+	CLOCK2.CNT = CLOCK2.CCA;
+	CLOCK3.CNT = CLOCK3.CCA;
 
 }//end of USART RX ISR
 
@@ -435,6 +491,10 @@ int main(void)
 	clock1_init();
 	clock2_init();
 	clock3_init();
+
+	set_pulse_width(1,10);
+	set_pulse_width(2,20);
+	set_pulse_width(3,30);
 
 	//Initialize USART
 	usart_init();
