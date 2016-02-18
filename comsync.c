@@ -160,7 +160,6 @@ void usart_parsebuffer(void){
 
 	switch (command) {
 
-		//TODO:Implement all of these commands
 		case 'p':
 			CLOCK1.PERH = usart_buffer[1];
 			CLOCK1.PERL = usart_buffer[2];
@@ -231,7 +230,6 @@ void timer0_init(void)
 void ccpa_init(void) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
 	TIMER0.CCA = 0x0001;
 
 	// Enable capture/compare channel A
@@ -248,7 +246,6 @@ void ccpa_init(void) {
 void ccpb_init(void) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
 	TIMER0.CCB = 0x0001;
 
 	// Enable capture/compare channel A
@@ -265,7 +262,6 @@ void ccpb_init(void) {
 void ccpc_init(void) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
 	TIMER0.CCC = 0x00FF;
 
 	// Enable capture/compare channel C
@@ -299,11 +295,9 @@ void ccpc_init(void) {
 void clock1_init(void) {
 
 	// PER controls the PWM period
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK1.PER = 17534;
 
 	// CCA controls the PWM duty cycle
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK1.CCA = 17535;
 
 	PORTD.PIN0CTRL |= PORT_INVEN_bm;
@@ -322,11 +316,9 @@ void clock1_init(void) {
 void clock2_init(void) {
 
 	// PER controls the PWM period
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK2.PER = 17534;
 
 	// CCA controls the PWM duty cycle
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK2.CCA = 17535;
 
 	PORTF.PIN0CTRL |= PORT_INVEN_bm;
@@ -346,11 +338,9 @@ void clock2_init(void) {
 void clock3_init(void) {
 
 	// PER controls the PWM period
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK3.PER = 17534;
 
 	// CCA controls the PWM duty cycle
-	// TODO: dynamically reconfigure this as per user input
 	CLOCK3.CCA = 17535;
 
 	PORTF.PIN4CTRL |= PORT_INVEN_bm;
