@@ -230,10 +230,10 @@ void master_init(void)
 // ===========================================================
 // CompareA initialization (tau1)
 // ===========================================================
-void tau1_init(void) {
+void tau1_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCA = 0x0000;
+	MASTER.CCA = tau;
 
 	// Enable capture/compare channel A
 	MASTER.CTRLB = MASTER.CTRLB | TC0_CCAEN_bm;
@@ -246,10 +246,10 @@ void tau1_init(void) {
 // ===========================================================
 // CompareB initialization (tau2)
 // ===========================================================
-void tau2_init(void) {
+void tau2_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCB = 0x0000;
+	MASTER.CCB = tau;
 
 	// Enable capture/compare channel A
 	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCBEN_bm);
@@ -262,10 +262,10 @@ void tau2_init(void) {
 // ===========================================================
 // CompareC initialization (tau3)
 // ===========================================================
-void tau3_init(void) {
+void tau3_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCC = 0x0000;
+	MASTER.CCC = tau;
 
 	// Enable capture/compare channel C
 	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
@@ -467,9 +467,9 @@ int main(void)
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
-	tau1_init();
-	tau2_init();
-	tau3_init();
+	tau1_init(0);
+	tau2_init(0);
+	tau3_init(0);
 
 	clock1_init();
 	clock2_init();
@@ -484,9 +484,6 @@ int main(void)
 
 	//Initialize USART
 	usart_init();
-
-	
-	dma_init();
 
 	//Interrupts: enable high priority interrupts in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
