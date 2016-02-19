@@ -15,11 +15,15 @@
 // Include Clock system driver from application note AVR1003
 #include "include/clksys_driver.h"
 
+// Include delay functions
+#include "include/delays.h"
+
 // Include timer and pulse configuration functions
 #include "include/timers.h"
 
 // Include USART-related functions
 #include "include/usart.h"
+
 
 // ============= INITIALIZATION FUNCTIONS ====================
 // ===========================================================

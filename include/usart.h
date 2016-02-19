@@ -2,12 +2,6 @@
 #include "delays.h"
 
 // ===========================================================
-// Global variables
-// ===========================================================
-static volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
-static volatile uint8_t usart_counter = 0;
-
-// ===========================================================
 // USART config macros
 // ===========================================================
 #define USART			USARTC0				//use for USB-Virtual COM Port

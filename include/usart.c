@@ -3,6 +3,12 @@
 #include "timers.h"
 
 // ===========================================================
+// Global variables
+// ===========================================================
+volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
+volatile uint8_t usart_counter = 0;
+
+// ===========================================================
 // USART Initialization
 // ===========================================================
 void usart_init(void)
@@ -21,7 +27,7 @@ void usart_init(void)
 	USART.BAUDCTRLA = BSEL_VALUE;	
 	USART.BAUDCTRLB = BSCALE_VALUE << 4;
 
-	// Set receive complete interrupt level
+	// Set receive complete interrupt level low
 	USART.CTRLA = USART_RXCINTLVL_LO_gc;
 
 	// Enable both RX and TX
