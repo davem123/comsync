@@ -1,6 +1,8 @@
 #include <avr/io.h> 
 #include <avr/interrupt.h>
 
+#define DEBUG
+
 #define false 0
 #define true  1
 
@@ -9,11 +11,13 @@
 	#define F_CPU 32000000UL
 #endif
 
+#define F_CPU_MHZ (uint8_t) (F_CPU / 1.0E6)
+
 // ATXMega_A1-Xplained board description
-#include "board.h"
+#include "include/board.h"
 
 // Include Clock system driver from application note AVR1003
-#include "clksys_driver.h"
+#include "include/clksys_driver.h"
 
 // Include avr-gcc delay routines
 #include <util/delay.h>
@@ -24,22 +28,23 @@
 volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
 volatile uint8_t usart_counter = 0;
 
-volatile uint8_t pulse_count = 0;
-volatile uint16_t pulse_length;
-volatile uint16_t pulse_delay;
-
-volatile uint8_t ccpa;
-volatile uint8_t ccpb;
-volatile uint8_t ccpc;
-
 // ===========================================================
 // Timers
 // ===========================================================
-#define TIMER0_OVF_VECT		TCC0_OVF_vect
-#define TIMER0				TCC0
-#define CCPA_VECT		TCC0_CCA_vect
-#define CCPB_VECT		TCC0_CCB_vect
-#define CCPC_VECT		TCC0_CCC_vect
+#define MASTER_OVF_VECT		TCC0_OVF_vect
+#define MASTER				TCC0
+
+#define TAU1_VECT			TCC0_CCA_vect
+#define TAU2_VECT			TCC0_CCB_vect
+#define TAU3_VECT			TCC0_CCC_vect
+
+#define CLOCK1				TCD0
+#define CLOCK2				TCF0
+#define CLOCK3				TCF1
+
+#define CLOCK1PIN			PORTD.PIN0CTRL
+#define CLOCK2PIN			PORTF.PIN0CTRL
+#define CLOCK3PIN			PORTF.PIN4CTRL
 
 // ===========================================================
 // USART
@@ -95,7 +100,6 @@ void delay1ms(uint16_t ms) {
 //Function prototypes
 void usart_rxbyte(uint8_t);
 void usart_parsebuffer(void);
-void config_triggered_pulse(uint8_t,uint16_t,uint16_t);
 
 // ===========================================================
 // USART Initialization
@@ -142,11 +146,11 @@ void usart_rxbyte(uint8_t rxbyte) {
 			USART.DATA = 0x0a;
 			usart_parsebuffer();
 		}
+		
 		else {
 			usart_buffer[usart_counter] = rxbyte;
 			usart_counter++;
 		}//end of usart if/else
-
 }//end of usart_rxbyte()
 
 // ===========================================================
@@ -159,14 +163,38 @@ void usart_parsebuffer(void){
 
 	switch (command) {
 
-		//TODO:Implement all of these commands
-		case 'T':
+		case 'p':
+			CLOCK1.PERH = usart_buffer[1];
+			CLOCK1.PERL = usart_buffer[2];
+			//flash the LEDs twice
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
-		case 'C':
+		case 'c':
+			CLOCK1.CCAH = usart_buffer[1];
+			CLOCK1.CCAL = usart_buffer[2];
+			//flash the LEDs thrice
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
-		case '?':
-			break;
-		case 'X':
+		case 'n':
+			CLOCK1.CCAH = usart_buffer[1];
+			CLOCK1.CCAL = usart_buffer[2];
+			//flash the LEDs... frice?
+			for (uint8_t i=0; i<2; i++){
+				LEDPORT.OUT = 0x00;
+				delay1ms(20);
+				LEDPORT.OUT = 0xFF;
+				delay1ms(20);
+			}
 			break;
 		default:
 			//flash the LEDs
@@ -182,156 +210,238 @@ void usart_parsebuffer(void){
 }//end of usart_parsebuffer()
 
 // ===========================================================
-// Timer0 Initialization
+// Master clock timer initialization
 // ===========================================================
-void timer0_init(void)
+void master_init(void)
 {
-	TIMER0.PERL = 0xFF;
-	TIMER0.PERH = 0xFF;
+	MASTER.PER = 65535;
 
-	// Start Timer0 with Clk/1 prescaling
-	TIMER0.CTRLA = ( TIMER0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	// Start Timer with Clk/1 prescaling
+	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Enable overflow interrupt level high
-	TIMER0.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
-	// Restart Timer0
-	TIMER0.CTRLFSET = TC_CMD_RESTART_gc;
+	// Restart Timer
+	MASTER.CTRLFSET = TC_CMD_RESTART_gc;
 
-}//end of Timer0_init()
+}//end of master_init()
 
 // ===========================================================
 // CompareA initialization (tau1)
 // ===========================================================
-void ccpa_init(void) {
+void tau1_init(uint16_t tau) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCAL = 0x01;
-	TIMER0.CCAH = 0x00;
+	MASTER.CCA = tau;
 
 	// Enable capture/compare channel A
-	TIMER0.CTRLB = TIMER0.CTRLB | TC0_CCAEN_bm;
+	MASTER.CTRLB = MASTER.CTRLB | TC0_CCAEN_bm;
 
 	//Enable compare channel A interrupt level high
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
 
 }
 
 // ===========================================================
 // CompareB initialization (tau2)
 // ===========================================================
-void ccpb_init(void) {
+void tau2_init(uint16_t tau) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCBL = 0x01;
-	TIMER0.CCBH = 0x00;
+	MASTER.CCB = tau;
 
 	// Enable capture/compare channel A
-	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCBEN_bm);
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCBEN_bm);
 
 	//Enable compare channel B interrupt level medium
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
 
 }
 
 // ===========================================================
 // CompareC initialization (tau3)
 // ===========================================================
-void ccpc_init(void) {
+void tau3_init(uint16_t tau) {
 	
 	// Set compare value
-	// TODO: dynamically reconfigure this as per user input
-	TIMER0.CCCL = 0xFF;
-	TIMER0.CCCH = 0x1F;
+	MASTER.CCC = tau;
 
 	// Enable capture/compare channel C
-	TIMER0.CTRLB = ( TIMER0.CTRLB | TC0_CCCEN_bm);
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
 
 	//Enable compare channel C interrupt level low
-	TIMER0.INTCTRLB = ( TIMER0.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
 
 }
 
 // ===========================================================
-// firepulse() pulse triggering function
+// Clock1 (first pulse) initialization
+// Uses a timer in single-slope waveform generation mode
+// to produce a single-shot pulse
+//
+// pulse width (cycles) = TOP - CCA
+// TOP = 65535 with a 16-bit timer.
+//
+// 1. Initialize timer with CCA > PER so that it counts up,
+// but never updates the output pin
+//
+// 2. When a pulse is desired, set CNT == CCA. Output is set immediately,
+// and cleared when CNT == TOP.
+//
+// As long as CCA > PER, only a single pulse will be fired.
+//
+// Measured delay before setting pin: 330ns
+//
+// Thanks to: http://wp.josh.com/2015/03/12/avr-timer-based-one-shot-explained/
 // ===========================================================
-void firepulse(){
+void clock1_init(void) {
 
-	// Do nothing for the specified delay time
-	for (int i=0; i < pulse_delay; i++) asm("nop");
+	// PER controls the PWM period
+	CLOCK1.PER = 65534;
 
-	// Repeat the pulse the specified number of times
-	for (int j=0; j < pulse_count; j++){
-		
-		// Set the pulse pin high
-		PULSEPORT = 0x01;
-		
-		// Don't set it low until the specified pulse length has elapsed
-		for (int k=0; k < pulse_length; k++) asm("nop");
-		PULSEPORT = 0x00;
-	}//end of for loop
-}//end of firepulse()
+	// CCA controls the PWM duty cycle
+	CLOCK1.CCA = 65535;
+
+	// Invert the output pin to get a positive pulse
+	CLOCK1PIN |= PORT_INVEN_bm;
+
+	// Start CLOCK1 with Clk/1 prescaling
+	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK1.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}//end of clock1_init()
+
+// Same as clock1
+void clock2_init(void) {
+
+	// PER controls the PWM period
+	CLOCK2.PER = 65534;
+
+	// CCA controls the PWM duty cycle
+	CLOCK2.CCA = 65535;
+
+	// Invert the output pin to get a positive pulse
+	CLOCK2PIN |= PORT_INVEN_bm;
+
+	// Start CLOCK2 with Clk/1 prescaling
+	CLOCK2.CTRLA = ( CLOCK2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK2.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK2.CTRLB = ( CLOCK2.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}//end of clock2_init()
+
+// Same as clock1
+void clock3_init(void) {
+
+	// PER controls the PWM period
+	CLOCK3.PER = 65534;
+
+	// CCA controls the PWM duty cycle
+	CLOCK3.CCA = 65535;
+
+	// Invert the output pin to get a positive pulse
+	CLOCK3PIN |= PORT_INVEN_bm;
+
+	// Start CLOCK3 with Clk/1 prescaling
+	CLOCK3.CTRLA = ( CLOCK3.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK3.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope generation mode and capture/compare channel A
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}//end of clock3_init()
 
 // ===========================================================
-// config_triggered_pulse() set the conditions for a train of
-// triggered pulses
+// Update the PER and CCA registers of the specified clock's
+// timer, to set the pulse width of the specified clock signal
+//
+// Parameters: (clock #, pulse width in microseconds)
+//
+// Example: set_pulse_width(1,350)
 // ===========================================================
-void config_triggered_pulse(uint8_t count, uint16_t length, uint16_t delay){
-	pulse_count = count;
-	pulse_length = length;
-	pulse_delay = delay;
-}//end of config_triggered_pulse()
+void set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
+
+	uint16_t pulse_width_us = pulse_width;
+
+	// For a 16-bit timer and 32MHz clock with Clk/1 prescaler:
+	// maximum pulse width (us) = (2^16 / F_CPU_MHZ) - 1 = 2047us
+
+	// Reduce too-wide pulses to the maximum width
+	if (pulse_width_us > 2047)
+		pulse_width_us = 2047;
+
+	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
+	// where timer_clock = F_CPU / prescaler
+	
+	uint16_t pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
+	
+	// pulse width (cycles) = TOP - CCA
+	uint16_t cca_value = (65535 - pulse_width_cycles);
+
+
+	switch (clocknumber) {
+		case 1:
+			CLOCK1.CCA = cca_value;
+			CLOCK1.PER = cca_value - 1;
+			break;
+		case 2:
+			CLOCK2.CCA = cca_value;
+			CLOCK2.PER = cca_value - 1;
+			break;
+		case 3:
+			CLOCK3.CCA = cca_value;
+			CLOCK3.PER = cca_value - 1;
+			break;
+		default:
+			break;
+	}//end of switch(clocknumber)
+}//end of set_pulse_width()
 
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(TIMER0_OVF_VECT) // TIMER0 overflow
+ISR(MASTER_OVF_VECT) // MASTER overflow
 {
-
 	PORTD.OUTTGL = 0x08;
-
 }//end of Timer0 ISR
 
-
-ISR(CCPA_VECT) // CompareA interrupt vector
+ISR(TAU1_VECT, ISR_NAKED) // CompareA interrupt vector
 {
-	PORTD.OUT |=(1<<2);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<2);
-
+	CLOCK1.CNT = CLOCK1.CCA;
 }//end of CompareA ISR
 
-ISR(CCPB_VECT) // CompareB interrupt vector
+ISR(TAU2_VECT, ISR_NAKED) // CompareB interrupt vector
 {
-
-	PORTD.OUT |=(1<<1);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<1);
-
+	CLOCK2.CNT = CLOCK2.CCA;
 }//end of CompareB ISR
 
-ISR(CCPC_VECT) // CompareC interrupt vector
+ISR(TAU3_VECT, ISR_NAKED) // CompareC interrupt vector
 {
-
-	PORTD.OUT |=(1<<0);
-	delay1ms(1);
-	PORTD.OUT &=~(1<<0);
-
+	CLOCK3.CNT = CLOCK3.CCA;
 }//end of CompareC ISR
 
-
 ISR(USART_VECT){
-
 	uint8_t rec_char;
 
 	// Wait until the data is received
-	while( (USART.STATUS & USART_RXCIF_bm) == 0 ) {}
+	//while( !(USART.STATUS & USART_RXCIF_bm))
 
+	//Reading the data clears the interrupt flag
 	rec_char = USART.DATA;
-	usart_rxbyte(rec_char);
-
+	//usart_rxbyte(rec_char);
+	
 }//end of USART RX ISR
 
 // ===========================================================
@@ -351,15 +461,26 @@ int main(void)
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
 
+	PORTF.DIR = 0xFF;
+	PORTF.OUT = 0x00;
+
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
+	tau1_init(0);
+	tau2_init(0);
+	tau3_init(0);
 
-	// Initialize Timer0
-	timer0_init();
-	ccpa_init();
-	ccpb_init();
-	ccpc_init();
+	clock1_init();
+	clock2_init();
+	clock3_init();
+
+	set_pulse_width(1,10);
+	set_pulse_width(2,20);
+	set_pulse_width(3,30);
+
+	// Initialize master clock
+	master_init();
 
 	//Initialize USART
 	usart_init();
@@ -379,6 +500,9 @@ int main(void)
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
+		#ifdef DEBUG
+			asm("nop");
+		#endif
 	}//end of while() loop
 
 }//end of main()
