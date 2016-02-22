@@ -24,8 +24,6 @@
 // Include USART-related functions
 #include "include/usart.h"
 
-
-// ============= INITIALIZATION FUNCTIONS ====================
 // ===========================================================
 // SYSTEM CLOCK
 // ===========================================================

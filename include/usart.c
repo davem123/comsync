@@ -14,8 +14,8 @@ volatile uint8_t usart_counter = 0;
 void usart_init(void)
 {
 
-	USART_PORT.DIRSET   = PIN3_bm;   // Pin 3 (TX) as output.
-	USART_PORT.DIRCLR   = PIN2_bm;   // Pin 2 (RX) as input.
+	USART_PORT.DIRSET = PIN3_bm;   // Pin 3 (TX) as output.
+	USART_PORT.DIRCLR = PIN2_bm;   // Pin 2 (RX) as input.
 
 	// USART, 8 Data bits, Even Parity, 1 Stop bit, Asynchronous
 //	USART.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | false;
@@ -28,7 +28,7 @@ void usart_init(void)
 	USART.BAUDCTRLB = BSCALE_VALUE << 4;
 
 	// Set receive complete interrupt level low
-	USART.CTRLA = USART_RXCINTLVL_LO_gc;
+	USART.CTRLA |= USART_RXCINTLVL_LO_gc;
 
 	// Enable both RX and TX
 	USART.CTRLB |= USART_RXEN_bm;
@@ -61,48 +61,37 @@ void usart_rxbyte(uint8_t rxbyte) {
 		}//end of usart if/else
 }//end of usart_rxbyte()
 
+uint16_t *usart_command_t(void) {
+
+	static uint16_t tau_ints[3];
+
+	uint32_t tau1,tau2,tau3;
+
+	//Convert the ASCII data values to 16-bit integers,
+	//then return as a 1D array
+
+	return tau_ints;
+}
+
 // ===========================================================
 // usart_parsebuffer() processes the commands received on the
 // USART and initiates the requested action.
 // ===========================================================
 void usart_parsebuffer(void){
-	usart_counter = 0;
+
+	// disable USART interrupts while processing so the data
+	// doesn't get corrupted
+	USART.CTRLA &= USART_RXCINTLVL_OFF_gc;
+
 	unsigned char command = usart_buffer[0];
 
 	switch (command) {
 
-		case 'p':
-			CLOCK1.PERH = usart_buffer[1];
-			CLOCK1.PERL = usart_buffer[2];
-			//flash the LEDs twice
-			for (uint8_t i=0; i<2; i++){
-				LEDPORT.OUT = 0x00;
-				delay1ms(20);
-				LEDPORT.OUT = 0xFF;
-				delay1ms(20);
-			}
+		case 'T':
+			usart_command_t();
 			break;
-		case 'c':
-			CLOCK1.CCAH = usart_buffer[1];
-			CLOCK1.CCAL = usart_buffer[2];
-			//flash the LEDs thrice
-			for (uint8_t i=0; i<2; i++){
-				LEDPORT.OUT = 0x00;
-				delay1ms(20);
-				LEDPORT.OUT = 0xFF;
-				delay1ms(20);
-			}
-			break;
-		case 'n':
-			CLOCK1.CCAH = usart_buffer[1];
-			CLOCK1.CCAL = usart_buffer[2];
-			//flash the LEDs... frice?
-			for (uint8_t i=0; i<2; i++){
-				LEDPORT.OUT = 0x00;
-				delay1ms(20);
-				LEDPORT.OUT = 0xFF;
-				delay1ms(20);
-			}
+		case 'X':
+			// disable all of the outputs
 			break;
 		default:
 			//flash the LEDs
@@ -114,5 +103,11 @@ void usart_parsebuffer(void){
 			}
 			break;
 	}//end of switch statement
+	
+	// Write the next byte to the beginning of the buffer
+	usart_counter = 0;
+
+	// Re-enable USART interrupts
+	USART.CTRLA |= USART_RXCINTLVL_LO_gc;
 
 }//end of usart_parsebuffer()
