@@ -1,60 +1,14 @@
 #include "timers.h"
 
 // ===========================================================
-// Update the PER and CCA registers of the specified clock's
-// timer, to set the pulse width of the specified clock signal
-//
-// Parameters: (clock #, pulse width in microseconds)
-//
-// Example: set_pulse_width(1,350)
-// ===========================================================
-void timers_set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
-
-	uint16_t pulse_width_us = pulse_width;
-
-	// For a 16-bit timer and 32MHz clock with Clk/1 prescaler:
-	// maximum pulse width (us) = (2^16 / F_CPU_MHZ) - 1 = 2047us
-
-	// Reduce too-wide pulses to the maximum width
-	if (pulse_width_us > 2047)
-		pulse_width_us = 2047;
-
-	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
-	// where timer_clock = F_CPU / prescaler
-	
-	uint16_t pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
-	
-	// pulse width (cycles) = TOP - CCA
-	uint16_t cca_value = (65535 - pulse_width_cycles);
-
-
-	switch (clocknumber) {
-		case 1:
-			CLOCK1.CCA = cca_value;
-			CLOCK1.PER = cca_value - 1;
-			break;
-		case 2:
-			CLOCK2.CCA = cca_value;
-			CLOCK2.PER = cca_value - 1;
-			break;
-		case 3:
-			CLOCK3.CCA = cca_value;
-			CLOCK3.PER = cca_value - 1;
-			break;
-		default:
-			break;
-	}//end of switch(clocknumber)
-}//end of set_pulse_width()
-
-// ===========================================================
 // Master clock timer initialization
 // ===========================================================
 void timers_master_init(void)
 {
 	MASTER.PER = 65535;
 
-	// Start Timer with Clk/1 prescaling
-	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	// Start Timer with Clk/64 prescaling
+	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV64_gc;
 
 	// Enable overflow interrupt level high
 	MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
@@ -199,3 +153,50 @@ void timers_clock3_init(void) {
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
 }//end of clock3_init()
+
+// ===========================================================
+// Update the PER and CCA registers of the specified clock's
+// timer, to set the pulse width of the specified clock signal
+//
+// Parameters: (clock #, pulse width in microseconds)
+//
+// Example: set_pulse_width(1,350)
+// ===========================================================
+void timers_set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
+
+	uint16_t pulse_width_us = pulse_width;
+
+	// For a 16-bit timer and 32MHz clock with Clk/1 prescaler:
+	// maximum pulse width (us) = (2^16 / F_CPU_MHZ) - 1 = 2047us
+
+	// Reduce too-wide pulses to the maximum width
+	if (pulse_width_us > 2047)
+		pulse_width_us = 2047;
+
+	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
+	// where timer_clock = F_CPU / prescaler
+	
+	uint16_t pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
+	
+	// pulse width (cycles) = TOP - CCA
+	uint16_t cca_value = (65535 - pulse_width_cycles);
+
+
+	switch (clocknumber) {
+		case 1:
+			CLOCK1.CCA = cca_value;
+			CLOCK1.PER = cca_value - 1;
+			break;
+		case 2:
+			CLOCK2.CCA = cca_value;
+			CLOCK2.PER = cca_value - 1;
+			break;
+		case 3:
+			CLOCK3.CCA = cca_value;
+			CLOCK3.PER = cca_value - 1;
+			break;
+		default:
+			break;
+	}//end of switch(clocknumber)
+}//end of set_pulse_width()
+
