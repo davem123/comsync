@@ -24,6 +24,8 @@
 // Include USART-related functions
 #include "include/usart.h"
 
+#include "include/dma.h"
+
 // ===========================================================
 // SYSTEM CLOCK
 // ===========================================================
@@ -50,22 +52,26 @@ ISR(MASTER_OVF_VECT) // MASTER overflow
 //Tau0/Clock0 is the master clock output.
 ISR(TAU0_VECT) // CompareA interrupt vector
 {
-	CLOCK0.CNT = CLOCK0.CCA;
+	// DMA controller does this:
+	// CLOCK0.CNT = CLOCK0.CCA;
 }//end of CompareD ISR
 
 ISR(TAU1_VECT) // CompareB interrupt vector
 {
-	CLOCK1.CNT = CLOCK1.CCA;
+	// DMA controller does this:
+	// DMA.CH1.CTRLA |= DMA_CH_TRFREQ_bm;
 }//end of CompareA ISR
 
 ISR(TAU2_VECT) // CompareC interrupt vector
 {
-	CLOCK2.CNT = CLOCK2.CCA;
+	// DMA controller does this:
+	// CLOCK2.CNT = CLOCK2.CCA;
 }//end of CompareB ISR
 
 ISR(TAU3_VECT) // CompareD interrupt vector
 {
-	CLOCK3.CNT = CLOCK3.CCA;
+	// DMA controller does this:
+	// CLOCK3.CNT = CLOCK3.CCA;
 }//end of CompareC ISR
 
 ISR(USART_VECT){
@@ -124,6 +130,9 @@ int main(void)
 
 	//Initialize USART
 	usart_init();
+
+	//Initialize DMA controller
+	dma_init();
 
 	//Interrupts: enable high priority interrupts in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
