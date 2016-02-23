@@ -11,12 +11,31 @@ void timers_master_init(void)
 	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV64_gc;
 
 	// Enable overflow interrupt level high
-	MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	//MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	// Disable overflow interrupt
+	MASTER.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 	// Restart Timer
 	MASTER.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of master_init()
+
+
+// ===========================================================
+// CompareD initialization (tau0)
+// ===========================================================
+void timers_tau0_init(uint16_t tau) {
+	
+	// Set compare value
+	MASTER.CCD = tau;
+
+	// Enable capture/compare channel D
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCDEN_bm);
+
+	//Enable compare channel D interrupt level high
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCDINTLVL_gm) | TC_CCDINTLVL_HI_gc;
+
+}
 
 // ===========================================================
 // CompareA initialization (tau1)
@@ -46,7 +65,7 @@ void timers_tau2_init(uint16_t tau) {
 	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCBEN_bm);
 
 	//Enable compare channel B interrupt level medium
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_MED_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_HI_gc;
 
 }
 
@@ -62,7 +81,7 @@ void timers_tau3_init(uint16_t tau) {
 	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
 
 	//Enable compare channel C interrupt level low
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_LO_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_HI_gc;
 
 }
 
@@ -86,6 +105,28 @@ void timers_tau3_init(uint16_t tau) {
 //
 // Thanks to: http://wp.josh.com/2015/03/12/avr-timer-based-one-shot-explained/
 // ===========================================================
+void timers_clock0_init(void) {
+
+	// PER controls the PWM period
+	CLOCK0.PER = 65534;
+
+	// CCA controls the PWM duty cycle
+	CLOCK0.CCA = 65535;
+
+	// Invert the output pin to get a positive pulse
+	CLOCK0PIN |= PORT_INVEN_bm;
+
+	// Start CLOCK0 with Clk/1 prescaling
+	CLOCK0.CTRLA = ( CLOCK0.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	
+	// Disable event actions - required for waveform generation mode
+	CLOCK0.CTRLD &= TC_EVACT_OFF_gc;
+
+	// Enable single-slope generation mode and capture/compare channel D
+	// Waveform generator overrides regular port OUT when CCAEN is set.
+	CLOCK0.CTRLB = ( CLOCK0.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+}//end of clock0_init()
+
 void timers_clock1_init(void) {
 
 	// PER controls the PWM period
@@ -98,17 +139,17 @@ void timers_clock1_init(void) {
 	CLOCK1PIN |= PORT_INVEN_bm;
 
 	// Start CLOCK1 with Clk/1 prescaling
-	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	CLOCK1.CTRLA = ( CLOCK1.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 	
 	// Disable event actions - required for waveform generation mode
 	CLOCK1.CTRLD &= TC_EVACT_OFF_gc;
 
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
-	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+	CLOCK1.CTRLB = ( CLOCK1.CTRLB & ~TC1_WGMODE_gm ) | TC_WGMODE_SS_gc | TC1_CCAEN_bm;
 }//end of clock1_init()
 
-// Same as clock1
+// Same as clock0
 void timers_clock2_init(void) {
 
 	// PER controls the PWM period
@@ -131,7 +172,7 @@ void timers_clock2_init(void) {
 	CLOCK2.CTRLB = ( CLOCK2.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
 }//end of clock2_init()
 
-// Same as clock1
+// Same as clock0
 void timers_clock3_init(void) {
 
 	// PER controls the PWM period
@@ -144,14 +185,14 @@ void timers_clock3_init(void) {
 	CLOCK3PIN |= PORT_INVEN_bm;
 
 	// Start CLOCK3 with Clk/1 prescaling
-	CLOCK3.CTRLA = ( CLOCK3.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+	CLOCK3.CTRLA = ( CLOCK3.CTRLA & ~TC1_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 	
 	// Disable event actions - required for waveform generation mode
 	CLOCK3.CTRLD &= TC_EVACT_OFF_gc;
 
 	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
-	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
+	CLOCK3.CTRLB = ( CLOCK3.CTRLB & ~TC1_WGMODE_gm ) | TC_WGMODE_SS_gc | TC1_CCAEN_bm;
 }//end of clock3_init()
 
 // ===========================================================
@@ -183,6 +224,10 @@ void timers_set_pulse_width(uint8_t clocknumber, uint16_t pulse_width) {
 
 
 	switch (clocknumber) {
+		case 0:
+			CLOCK0.CCA = cca_value;
+			CLOCK0.PER = cca_value - 1;
+			break;
 		case 1:
 			CLOCK1.CCA = cca_value;
 			CLOCK1.PER = cca_value - 1;

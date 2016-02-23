@@ -44,20 +44,26 @@ void configure_system_clock(void)
 // ===========================================================
 ISR(MASTER_OVF_VECT) // MASTER overflow
 {
-	PORTD.OUTTGL = 0x08;
+	//PORTD.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
-ISR(TAU1_VECT, ISR_NAKED) // CompareA interrupt vector
+//Tau0/Clock0 is the master clock output.
+ISR(TAU0_VECT) // CompareA interrupt vector
+{
+	CLOCK0.CNT = CLOCK0.CCA;
+}//end of CompareD ISR
+
+ISR(TAU1_VECT) // CompareB interrupt vector
 {
 	CLOCK1.CNT = CLOCK1.CCA;
 }//end of CompareA ISR
 
-ISR(TAU2_VECT, ISR_NAKED) // CompareB interrupt vector
+ISR(TAU2_VECT) // CompareC interrupt vector
 {
 	CLOCK2.CNT = CLOCK2.CCA;
 }//end of CompareB ISR
 
-ISR(TAU3_VECT, ISR_NAKED) // CompareC interrupt vector
+ISR(TAU3_VECT) // CompareD interrupt vector
 {
 	CLOCK3.CNT = CLOCK3.CCA;
 }//end of CompareC ISR
@@ -87,15 +93,19 @@ int main(void)
 
 	PORTD.DIR = 0xFF; // all outputs
 	PORTD.OUT = 0x00;
+	
+	PORTF.DIR = 0xFF;
+	PORTF.OUT = 0x00;
 
 	LEDPORT.DIR = 0xFF; //Set as ouput 
 	LEDPORT.OUT = 0xFF; //Default off for LED
 
-	PORTF.DIR = 0xFF;
-	PORTF.OUT = 0x00;
-
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
+
+	timers_tau0_init(0);
+	timers_clock0_init();
+	timers_set_pulse_width(0,10);
 
 	timers_tau1_init(0);
 	timers_tau2_init(0);
