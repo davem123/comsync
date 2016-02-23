@@ -46,7 +46,7 @@ void dma_init(void) {
 	DMA.CH1.REPCNT = 0;
 	
 	// Enable Channel 0, single-shot transfer, 2-byte burst.
-	DMA.CH1.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm | DMA_CH_SINGLE_bm;
+	DMA.CH1.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
 	DMA.CH1.TRFCNTL = 0x02;
@@ -75,7 +75,7 @@ void dma_init(void) {
 	DMA.CH2.REPCNT = 0;
 	
 	// Enable Channel 0, single-shot transfer, 2-byte burst.
-	DMA.CH2.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm | DMA_CH_SINGLE_bm;
+	DMA.CH2.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
 	DMA.CH2.TRFCNTL = 0x02;
@@ -104,7 +104,7 @@ void dma_init(void) {
 	DMA.CH3.REPCNT = 0;
 	
 	// Enable Channel 0, single-shot transfer, 2-byte burst.
-	DMA.CH3.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm | DMA_CH_SINGLE_bm;
+	DMA.CH3.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
 	DMA.CH3.TRFCNTL = 0x02;
@@ -126,14 +126,7 @@ void dma_init(void) {
 	DMA.CH3.DESTADDR1 = ( ( (uint16_t) 0x0B60) >> 8 ) & 0xFF;
 	DMA.CH3.DESTADDR2 = 0;
 
-
-
-	// Reset DMA controller
-	//DMA.CTRL = 0;
-	//DMA.CTRL = DMA_RESET_bm;
-	//while ((DMA.CTRL & DMA_RESET_bm) != 0);
-
-	// Enable DMA controller, double buffering off, 
-	// round robin priority mode	
-	DMA.CTRL = DMA_ENABLE_bm | DMA_DBUFMODE_DISABLED_gc | DMA_PRIMODE_RR0123_gc;
+	// Enable DMA controller, double buffer enabled on ch0/1 and ch2/3, 
+	// Channel priority: Ch0 > Ch1 > Ch2 > Ch3
+	DMA.CTRL = DMA_ENABLE_bm | DMA_DBUFMODE_CH01CH23_gc | DMA_PRIMODE_CH0123_gc;
 }
