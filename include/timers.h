@@ -33,11 +33,6 @@
 // ===========================================================
 void timers_master_init(void);
 
-void timers_tau0_init(uint16_t addr, uint16_t tau);
-void timers_tau1_init(uint16_t tau);
-void timers_tau2_init(uint16_t tau);
-void timers_tau3_init(uint16_t tau);
-
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,
 						volatile uint8_t *addr_intctrlb,
@@ -46,9 +41,16 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						uint16_t tau
 					);
 
-void timers_clock0_init(void);
-void timers_clock1_init(void);
-void timers_clock2_init(void);
-void timers_clock3_init(void);
+void timers_init_clock(	volatile uint16_t *addr_per,
+						volatile uint16_t *addr_cca,
+						volatile uint8_t *addr_clockpin,
+						volatile uint8_t *addr_ctrla,
+						volatile uint8_t *addr_ctrlb,
+						volatile uint8_t *addr_ctrld,
+						uint8_t clksel_bm
+					);
 
-void timers_set_pulse_width(uint8_t clocknumber, uint16_t pulse_width);
+void timers_set_pulse_width(volatile uint16_t *addr_cca,
+							volatile uint16_t *addr_per,
+							uint16_t pulse_width
+							);

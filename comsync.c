@@ -118,8 +118,6 @@ int main(void)
 						TC_CCAINTLVL_HI_gc,		//Interrupt level bitmask
 						0						//TauN (trigger) delay
 					);
-	timers_clock0_init();
-	timers_set_pulse_width(0,1000);
 
 	// Tau1-3/slave pulses initialization
 	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
@@ -145,13 +143,58 @@ int main(void)
 						0						//TauN (trigger) delay
 					);
 
-	timers_clock1_init();
-	timers_clock2_init();
-	timers_clock3_init();
+	
+	timers_init_clock	(	&CLOCK0.PER,
+							&CLOCK0.CCA,
+							&CLOCK0PIN,
+							&CLOCK0.CTRLA,
+							&CLOCK0.CTRLB,
+							&CLOCK0.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
 
-	timers_set_pulse_width(1,1000);
-	timers_set_pulse_width(2,1000);
-	timers_set_pulse_width(3,1000);
+	timers_init_clock	(	&CLOCK1.PER,
+							&CLOCK1.CCA,
+							&CLOCK1PIN,
+							&CLOCK1.CTRLA,
+							&CLOCK1.CTRLB,
+							&CLOCK1.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_init_clock	(	&CLOCK2.PER,
+							&CLOCK2.CCA,
+							&CLOCK2PIN,
+							&CLOCK2.CTRLA,
+							&CLOCK2.CTRLB,
+							&CLOCK2.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_init_clock	(	&CLOCK3.PER,
+							&CLOCK3.CCA,
+							&CLOCK3PIN,
+							&CLOCK3.CTRLA,
+							&CLOCK3.CTRLB,
+							&CLOCK3.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_set_pulse_width(	&CLOCK0.CCA,
+							&CLOCK0.PER,
+							1000);
+								
+	timers_set_pulse_width(	&CLOCK1.CCA,
+							&CLOCK1.PER,
+							1000);	
+
+	timers_set_pulse_width(	&CLOCK2.CCA,
+							&CLOCK2.PER,
+							1000);	
+
+	timers_set_pulse_width(	&CLOCK3.CCA,
+							&CLOCK3.PER,
+							1000);	
 
 	// Initialize master clock
 	timers_master_init();
