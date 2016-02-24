@@ -32,9 +32,18 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						uint16_t tau
 					) {
 	
-	// Set compare value
+	volatile uint16_t cca_value;
+
+	// Set compare value n
+	// n = (tau/128) * 65535
+	// 65535/128 = 511.99
+	if (tau >= 127)
+		cca_value = 0xFFFF;
+	else
+		cca_value = tau * 512;
+
 	//MASTER.CCn = tau;
-	_SFR_MEM16(addr_ccN) = tau;
+	_SFR_MEM16(addr_ccN) = cca_value;
 
 	// Enable capture/compare channel A
 	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
