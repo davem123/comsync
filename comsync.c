@@ -111,19 +111,19 @@ int main(void)
 
 	timers_tau0_init(0);
 	timers_clock0_init();
-	timers_set_pulse_width(0,10);
+	timers_set_pulse_width(0,1000);
 
-	timers_tau1_init(0);
-	timers_tau2_init(0);
-	timers_tau3_init(0);
+	timers_tau1_init(10);
+	timers_tau2_init(20);
+	timers_tau3_init(30);
 
 	timers_clock1_init();
 	timers_clock2_init();
 	timers_clock3_init();
 
-	timers_set_pulse_width(1,10);
-	timers_set_pulse_width(2,20);
-	timers_set_pulse_width(3,30);
+	timers_set_pulse_width(1,1000);
+	timers_set_pulse_width(2,1000);
+	timers_set_pulse_width(3,1000);
 
 	// Initialize master clock
 	timers_master_init();

@@ -27,13 +27,13 @@ void timers_master_init(void)
 void timers_tau0_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCD = tau;
+	MASTER.CCA = tau;
 
-	// Enable capture/compare channel D
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCDEN_bm);
+	// Enable capture/compare channel A
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCAEN_bm);
 
 	//Enable compare channel D interrupt level high
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCDINTLVL_gm) | TC_CCDINTLVL_HI_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
 
 }
 
@@ -43,13 +43,13 @@ void timers_tau0_init(uint16_t tau) {
 void timers_tau1_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCA = tau;
+	MASTER.CCB = tau;
 
-	// Enable capture/compare channel A
-	MASTER.CTRLB = MASTER.CTRLB | TC0_CCAEN_bm;
+	// Enable capture/compare channel B
+	MASTER.CTRLB = MASTER.CTRLB | TC0_CCBEN_bm;
 
-	//Enable compare channel A interrupt level high
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+	//Enable compare channel B interrupt level high
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_HI_gc;
 
 }
 
@@ -59,13 +59,13 @@ void timers_tau1_init(uint16_t tau) {
 void timers_tau2_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCB = tau;
+	MASTER.CCC = tau;
 
-	// Enable capture/compare channel A
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCBEN_bm);
+	// Enable capture/compare channel C
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
 
-	//Enable compare channel B interrupt level medium
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_HI_gc;
+	//Enable compare channel C interrupt level medium
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_HI_gc;
 
 }
 
@@ -75,13 +75,13 @@ void timers_tau2_init(uint16_t tau) {
 void timers_tau3_init(uint16_t tau) {
 	
 	// Set compare value
-	MASTER.CCC = tau;
+	MASTER.CCD = tau;
 
-	// Enable capture/compare channel C
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
+	// Enable capture/compare channel D
+	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCDEN_bm);
 
 	//Enable compare channel C interrupt level low
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_HI_gc;
+	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCDINTLVL_gm) | TC_CCDINTLVL_HI_gc;
 
 }
 
@@ -122,7 +122,7 @@ void timers_clock0_init(void) {
 	// Disable event actions - required for waveform generation mode
 	CLOCK0.CTRLD &= TC_EVACT_OFF_gc;
 
-	// Enable single-slope generation mode and capture/compare channel D
+	// Enable single-slope generation mode and capture/compare channel A
 	// Waveform generator overrides regular port OUT when CCAEN is set.
 	CLOCK0.CTRLB = ( CLOCK0.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_SS_gc | TC0_CCAEN_bm;
 }//end of clock0_init()

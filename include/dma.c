@@ -45,7 +45,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH1.REPCNT = 0;
 	
-	// Enable Channel 0, single-shot transfer, 2-byte burst.
+	// Enable Channel 1, single-shot transfer, 2-byte burst.
 	DMA.CH1.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -74,7 +74,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH2.REPCNT = 0;
 	
-	// Enable Channel 0, single-shot transfer, 2-byte burst.
+	// Enable Channel 2, single-shot transfer, 2-byte burst.
 	DMA.CH2.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -103,7 +103,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH3.REPCNT = 0;
 	
-	// Enable Channel 0, single-shot transfer, 2-byte burst.
+	// Enable Channel 3, single-shot transfer, 2-byte burst.
 	DMA.CH3.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
