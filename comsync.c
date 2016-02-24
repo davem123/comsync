@@ -24,6 +24,7 @@
 // Include USART-related functions
 #include "include/usart.h"
 
+// Include DMA controller functions
 #include "include/dma.h"
 
 // ===========================================================
@@ -109,13 +110,40 @@ int main(void)
 	//Configure System Clock
 	configure_system_clock(); //32 MHz
 
-	timers_tau0_init(0);
+	// Tau0/Master pulse initialization
+	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCAEN_bm,			//Capture channel bitmask
+						TC_CCAINTLVL_HI_gc,		//Interrupt level bitmask
+						0						//TauN (trigger) delay
+					);
 	timers_clock0_init();
 	timers_set_pulse_width(0,1000);
 
-	timers_tau1_init(10);
-	timers_tau2_init(20);
-	timers_tau3_init(30);
+	// Tau1-3/slave pulses initialization
+	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCBEN_bm,			//Capture channel bitmask
+						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
+						0						//TauN (trigger) delay
+					);
+	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCCEN_bm,			//Capture channel bitmask
+						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
+						0						//TauN (trigger) delay
+					);
+
+	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCDEN_bm,			//Capture channel bitmask
+						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
+						0						//TauN (trigger) delay
+					);
 
 	timers_clock1_init();
 	timers_clock2_init();

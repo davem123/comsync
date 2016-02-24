@@ -22,68 +22,28 @@ void timers_master_init(void)
 
 
 // ===========================================================
-// CompareD initialization (tau0)
+// Tau (trigger delay) initialization
+// Modifies the registers of timer "MASTER"
 // ===========================================================
-void timers_tau0_init(uint16_t tau) {
+void timers_tau_init(	volatile uint16_t *addr_ccN,
+						volatile uint8_t *addr_ctrlb,
+						volatile uint8_t *addr_intctrlb,
+						uint8_t capture_ch_bm,
+						uint8_t interrupt_level_bm,
+						uint16_t tau
+					) {
 	
 	// Set compare value
-	MASTER.CCA = tau;
+	//MASTER.CCn = tau;
+	_SFR_MEM16(addr_ccN) = tau;
 
 	// Enable capture/compare channel A
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCAEN_bm);
+	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
 
 	//Enable compare channel D interrupt level high
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCAINTLVL_gm) | TC_CCAINTLVL_HI_gc;
+	_SFR_MEM16(addr_intctrlb) |= interrupt_level_bm;
 
-}
-
-// ===========================================================
-// CompareA initialization (tau1)
-// ===========================================================
-void timers_tau1_init(uint16_t tau) {
-	
-	// Set compare value
-	MASTER.CCB = tau;
-
-	// Enable capture/compare channel B
-	MASTER.CTRLB = MASTER.CTRLB | TC0_CCBEN_bm;
-
-	//Enable compare channel B interrupt level high
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCBINTLVL_gm) | TC_CCBINTLVL_HI_gc;
-
-}
-
-// ===========================================================
-// CompareB initialization (tau2)
-// ===========================================================
-void timers_tau2_init(uint16_t tau) {
-	
-	// Set compare value
-	MASTER.CCC = tau;
-
-	// Enable capture/compare channel C
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCCEN_bm);
-
-	//Enable compare channel C interrupt level medium
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCCINTLVL_gm) | TC_CCCINTLVL_HI_gc;
-
-}
-
-// ===========================================================
-// CompareC initialization (tau3)
-// ===========================================================
-void timers_tau3_init(uint16_t tau) {
-	
-	// Set compare value
-	MASTER.CCD = tau;
-
-	// Enable capture/compare channel D
-	MASTER.CTRLB = ( MASTER.CTRLB | TC0_CCDEN_bm);
-
-	//Enable compare channel C interrupt level low
-	MASTER.INTCTRLB = ( MASTER.INTCTRLB & ~TC0_CCDINTLVL_gm) | TC_CCDINTLVL_HI_gc;
-
-}
+}//end of timers_tau_init()
 
 // ===========================================================
 // Clock1 (first pulse) initialization
