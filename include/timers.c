@@ -5,24 +5,50 @@
 // ===========================================================
 void timers_master_init(void)
 {
-	MASTER.PER = 65535;
+	// MASTERL = Least significant timer (16 bits)
+	// MASTERH = Most significant timer (16 bits)
 
-	// Start Timer with Clk/64 prescaling
-	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV64_gc;
+	// With a 32-bit timer (and no prescaler):
+	// Resolution = 31.25ns (1 clock cycle)
+	// Max period = 31.25ns * 2^32 = 134.2 seconds
+	
+	// For 100ms period, PER = 0x0030D400 (3.2e6 * (1/32MHz) = 100ms)
+
+	uint32_t period = 0x0030D400;
+
+	// ======================================
+	// MASTERL (Least signifcant timer) setup
+	// ======================================
+	MASTERL.PER = (uint16_t) (period & 0x0000FFFF);
+
+	// Use the system clock for MASTERL
+	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+
+	// Enable event channel 0
+	// Event source = Timer C0 overflow
+	EVSYS.CH0MUX |= EVSYS_CHMUX_TCC0_OVF_gc;
+
+	// ======================================
+	// MASTERH (Most signifcant timer) setup
+	// ======================================
+	MASTERH.PER = (uint16_t) ( (period & 0xFFFF0000) >> 16);
+
+	// Use event channel 0 (MASTERL overflow) as the clock for MASTERH
+	MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
 
 	// Enable overflow interrupt level high
-	//MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	//MASTERH.INTCTRLA = TC_OVFINTLVL_HI_gc;
 	// Disable overflow interrupt
-	MASTER.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+	MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 	// Restart Timer
-	MASTER.CTRLFSET = TC_CMD_RESTART_gc;
+	MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
 
 }//end of master_init()
 
 // ===========================================================
 // Tau (trigger delay) initialization
-// Modifies the registers of timer "MASTER"
+// Modifies the registers of timer "MASTERH"
 // ===========================================================
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,
@@ -37,12 +63,13 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 	// Set compare value n
 	// n = (tau/128) * 65535
 	// 65535/128 = 511.99
-	if (tau >= 127)
-		cca_value = 0xFFFF;
-	else
-		cca_value = tau * 512;
+	//if (tau >= 127)
+//		cca_value = 0xFFFF;
+//	else
+//		cca_value = tau * 512;
+	cca_value = tau;
 
-	//MASTER.CCn = tau;
+	//MASTERH.CCn = tau;
 	_SFR_MEM16(addr_ccN) = cca_value;
 
 	// Enable capture/compare channel A
