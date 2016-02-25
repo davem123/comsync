@@ -29,18 +29,41 @@
 
 // ===========================================================
 // SYSTEM CLOCK
+//
+// Configures the system clock and the built-in PLL.
+// Using the PLL as the main clock source enables some
+// peripherals to run at a higher speed than the CPU.
+//
+// The higher peripheral clock (ClkPER4) is required for
+// high-resolution timer operation.
 // ===========================================================
-void configure_system_clock(void)
-{
-	CLKSYS_Enable( OSC_RC32MEN_bm );						// Enable internal 32 MHz ring oscillator
-	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );	// ... and wait until it's stable
+void configure_system_clock_pll(void) {
+	
+	// Use the 32MHz RC oscillator as the PLL clock,
+	// Run the PLL at (32MHz/4) x 16 = 128MHz
+	CLKSYS_PLL_Config( OSC_PLLSRC_RC32M_gc, 16 );
 
-//	CLKSYS_AutoCalibration_Enable(OSC_RC32MCREF_bm, 1);		// Enable auto-correction - external
-//	CLKSYS_AutoCalibration_Enable(OSC_RC32MCREF_bm, 0);		// Enable auto-correction - internal
+	// Enable 32MHz RC oscillator
+	CLKSYS_Enable( OSC_RC32MEN_bm);
+	while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
 
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );	// Set the 32 MHz ring oscillator as the main clock source.
-	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );		// Disable the other oscillators.
-}//end of ConfigureSystemClock()
+	// Enable PLL
+	CLKSYS_Enable( OSC_RC32MEN_bm + OSC_PLLEN_bm ); 
+	while ( CLKSYS_IsReady( OSC_PLLRDY_bm ) == 0 );
+
+	// Set ClkSys prescalers so that:
+	// ClkPER4 = 128MHz
+	// ClkPER2 = 64MHz
+	// ClkPER and ClkCPU = 32MHz
+	CLKSYS_Prescalers_Config( CLK_PSADIV_1_gc, CLK_PSBCDIV_2_2_gc );
+
+	// Use PLL as the main clock now that it's configured
+	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_PLL_gc );
+
+	// Disable the other oscillators.
+	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );
+	
+}//end of configure_pll()
 
 // ===========================================================
 // INTERRUPT HANDLERS
@@ -97,18 +120,21 @@ int main(void)
 	cli();
 
 	// Configure DIOs
-
-	PORTD.DIR = 0xFF; // all outputs
+	PORTD.DIR = 0xFF; //All outputs
 	PORTD.OUT = 0x00;
 	
-	PORTF.DIR = 0xFF;
+	PORTF.DIR = 0xFF; //All outputs
 	PORTF.OUT = 0x00;
 
-	LEDPORT.DIR = 0xFF; //Set as ouput 
+	LEDPORT.DIR = 0xFF; //All outputs
 	LEDPORT.OUT = 0xFF; //Default off for LED
 
-	//Configure System Clock
-	configure_system_clock(); //32 MHz
+	// Configure System Clock using the PLL for a faster
+	// peripheral clock
+	// ClkCPU = 32MHz
+	// ClkPER2 = 64
+	// ClkPER4 = 128MHz
+	configure_system_clock_pll();
 
 	// Tau0/Master pulse initialization
 	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
@@ -125,14 +151,14 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						10						//TauN (trigger) delay
+						20						//TauN (trigger) delay
 					);
 	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
 						&MASTER.CTRLB,			//Address of CTRLB
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						100						//TauN (trigger) delay (ms)
+						21						//TauN (trigger) delay (ms)
 					);
 
 	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
@@ -140,17 +166,17 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						1000					//TauN (trigger) delay (ms)
+						22						//TauN (trigger) delay (ms)
 					);
 
 	
-	timers_init_clock	(	&CLOCK0.PER,
-							&CLOCK0.CCA,
-							&CLOCK0PIN,
-							&CLOCK0.CTRLA,
-							&CLOCK0.CTRLB,
-							&CLOCK0.CTRLD,
-							TC_CLKSEL_DIV1_gc
+	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER
+							&CLOCK0.CCA,		//Address of CLOCK0.CCA
+							&CLOCK0PIN,			//Address of CLOCK0PIN
+							&CLOCK0.CTRLA,		//Address of CLOCK0.CTRLA
+							&CLOCK0.CTRLB,		//Address of CLOCK0.CTRLB
+							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
+							TC_CLKSEL_DIV1_gc	//Timer prescaler bitmask
 						);
 
 	timers_init_clock	(	&CLOCK1.PER,
