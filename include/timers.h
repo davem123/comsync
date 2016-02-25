@@ -10,9 +10,8 @@
 // ===========================================================
 // Timer Configuration Macros
 // ===========================================================
-#define MASTERH_OVF_VECT	TCC1_OVF_vect
-#define MASTERH				TCC1
-#define MASTERL				TCC0
+#define MASTER_OVF_VECT		TCC0_OVF_vect
+#define MASTER				TCC0
 
 #define TAU0_VECT			TCC0_CCA_vect
 #define TAU1_VECT			TCC0_CCB_vect
