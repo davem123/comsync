@@ -223,7 +223,9 @@ int main(void)
 							1000);	
 
 	// Initialize master clock
-	timers_master_init();
+	// 65535 = ~127ms period
+	// 51602 = ~100ms
+	timers_master_init(51602);
 
 	//Initialize USART
 	usart_init();

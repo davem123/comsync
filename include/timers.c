@@ -3,7 +3,7 @@
 // ===========================================================
 // Master clock timer initialization
 // ===========================================================
-void timers_master_init(void)
+void timers_master_init(uint16_t period)
 {
 	// Enable hi-res extension for timer C0
 	HIRESC.CTRL = HIRES_HREN_TC0_gc;
@@ -12,7 +12,7 @@ void timers_master_init(void)
 	// The two lsb of the timer/counter period register
 	// must be set to zero to ensure correct operation
 	// (datasheet p. 186)
-	MASTER.PER = 65535 & 0xFFFC;
+	MASTER.PER = period & 0xFFFC;
 
 	// Start Timer with Clk/64 prescaling
 	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV256_gc;
