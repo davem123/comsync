@@ -60,7 +60,7 @@ void usart_rxbyte(uint8_t rxbyte) {
 			usart_counter++;
 		}//end of usart if/else
 }//end of usart_rxbyte()
-
+/*
 uint16_t *usart_command_t(void) {
 
 	static uint16_t tau_ints[3];
@@ -72,7 +72,7 @@ uint16_t *usart_command_t(void) {
 
 	return tau_ints;
 }
-
+*/
 // ===========================================================
 // usart_parsebuffer() processes the commands received on the
 // USART and initiates the requested action.
@@ -88,7 +88,7 @@ void usart_parsebuffer(void){
 	switch (command) {
 
 		case 'T':
-			usart_command_t();
+			//usart_command_t();
 			break;
 		case 'X':
 			// disable all of the outputs

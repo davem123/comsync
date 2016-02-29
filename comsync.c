@@ -24,42 +24,78 @@
 // Include USART-related functions
 #include "include/usart.h"
 
+// Include DMA controller functions
+#include "include/dma.h"
+
 // ===========================================================
 // SYSTEM CLOCK
+//
+// Configures the system clock and the built-in PLL.
+// Using the PLL as the main clock source enables some
+// peripherals to run at a higher speed than the CPU.
+//
+// The higher peripheral clock (ClkPER4) is required for
+// high-resolution timer operation.
 // ===========================================================
-void configure_system_clock(void)
-{
-	CLKSYS_Enable( OSC_RC32MEN_bm );						// Enable internal 32 MHz ring oscillator
-	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );	// ... and wait until it's stable
+void configure_system_clock_pll(void) {
+	
+	// Use the 32MHz RC oscillator as the PLL clock,
+	// Run the PLL at (32MHz/4) x 16 = 128MHz
+	CLKSYS_PLL_Config( OSC_PLLSRC_RC32M_gc, 16 );
 
-//	CLKSYS_AutoCalibration_Enable(OSC_RC32MCREF_bm, 1);		// Enable auto-correction - external
-//	CLKSYS_AutoCalibration_Enable(OSC_RC32MCREF_bm, 0);		// Enable auto-correction - internal
+	// Enable 32MHz RC oscillator
+	CLKSYS_Enable( OSC_RC32MEN_bm);
+	while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
 
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );	// Set the 32 MHz ring oscillator as the main clock source.
-	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );		// Disable the other oscillators.
-}//end of ConfigureSystemClock()
+	// Enable PLL
+	CLKSYS_Enable( OSC_RC32MEN_bm + OSC_PLLEN_bm ); 
+	while ( CLKSYS_IsReady( OSC_PLLRDY_bm ) == 0 );
+
+	// Set ClkSys prescalers so that:
+	// ClkPER4 = 128MHz
+	// ClkPER2 = 64MHz
+	// ClkPER and ClkCPU = 32MHz
+	CLKSYS_Prescalers_Config( CLK_PSADIV_1_gc, CLK_PSBCDIV_2_2_gc );
+
+	// Use PLL as the main clock now that it's configured
+	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_PLL_gc );
+
+	// Disable the other oscillators.
+	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );
+	
+}//end of configure_pll()
 
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
 ISR(MASTER_OVF_VECT) // MASTER overflow
 {
-	PORTD.OUTTGL = 0x08;
+	//PORTD.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
-ISR(TAU1_VECT, ISR_NAKED) // CompareA interrupt vector
+//Tau0/Clock0 is the master clock output.
+ISR(TAU0_VECT) // CompareA interrupt vector
 {
-	CLOCK1.CNT = CLOCK1.CCA;
+	// DMA controller does this:
+	// CLOCK0.CNT = CLOCK0.CCA;
+}//end of CompareD ISR
+
+ISR(TAU1_VECT) // CompareB interrupt vector
+{
+	// DMA controller does this:
+	// DMA.CH1.CTRLA |= DMA_CH_TRFREQ_bm;
 }//end of CompareA ISR
 
-ISR(TAU2_VECT, ISR_NAKED) // CompareB interrupt vector
+ISR(TAU2_VECT) // CompareC interrupt vector
 {
-	CLOCK2.CNT = CLOCK2.CCA;
+	// DMA controller does this:
+	// CLOCK2.CNT = CLOCK2.CCA;
 }//end of CompareB ISR
 
-ISR(TAU3_VECT, ISR_NAKED) // CompareC interrupt vector
+ISR(TAU3_VECT) // CompareD interrupt vector
 {
-	CLOCK3.CNT = CLOCK3.CCA;
+	// DMA controller does this:
+	// CLOCK3.CNT = CLOCK3.CCA;
 }//end of CompareC ISR
 
 ISR(USART_VECT){
@@ -84,36 +120,118 @@ int main(void)
 	cli();
 
 	// Configure DIOs
-
-	PORTD.DIR = 0xFF; // all outputs
+	PORTD.DIR = 0xFF; //All outputs
 	PORTD.OUT = 0x00;
-
-	LEDPORT.DIR = 0xFF; //Set as ouput 
-	LEDPORT.OUT = 0xFF; //Default off for LED
-
-	PORTF.DIR = 0xFF;
+	
+	PORTF.DIR = 0xFF; //All outputs
 	PORTF.OUT = 0x00;
 
-	//Configure System Clock
-	configure_system_clock(); //32 MHz
+	LEDPORT.DIR = 0xFF; //All outputs
+	LEDPORT.OUT = 0xFF; //Default off for LED
 
-	timers_tau1_init(0);
-	timers_tau2_init(0);
-	timers_tau3_init(0);
+	// Configure System Clock using the PLL for a faster
+	// peripheral clock
+	// ClkCPU = 32MHz
+	// ClkPER2 = 64
+	// ClkPER4 = 128MHz
+	configure_system_clock_pll();
 
-	timers_clock1_init();
-	timers_clock2_init();
-	timers_clock3_init();
+	// Tau0/Master pulse initialization
+	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCAEN_bm,			//Capture channel bitmask
+						TC_CCAINTLVL_HI_gc,		//Interrupt level bitmask
+						0						//TauN (trigger) delay (ms)
+					);
 
-	timers_set_pulse_width(1,10);
-	timers_set_pulse_width(2,20);
-	timers_set_pulse_width(3,30);
+	// Tau1-3/slave pulses initialization
+	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCBEN_bm,			//Capture channel bitmask
+						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
+						20						//TauN (trigger) delay
+					);
+	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCCEN_bm,			//Capture channel bitmask
+						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
+						21						//TauN (trigger) delay (ms)
+					);
+
+	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCDEN_bm,			//Capture channel bitmask
+						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
+						22						//TauN (trigger) delay (ms)
+					);
+
+	
+	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER
+							&CLOCK0.CCA,		//Address of CLOCK0.CCA
+							&CLOCK0PIN,			//Address of CLOCK0PIN
+							&CLOCK0.CTRLA,		//Address of CLOCK0.CTRLA
+							&CLOCK0.CTRLB,		//Address of CLOCK0.CTRLB
+							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
+							TC_CLKSEL_DIV1_gc	//Timer prescaler bitmask
+						);
+
+	timers_init_clock	(	&CLOCK1.PER,
+							&CLOCK1.CCA,
+							&CLOCK1PIN,
+							&CLOCK1.CTRLA,
+							&CLOCK1.CTRLB,
+							&CLOCK1.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_init_clock	(	&CLOCK2.PER,
+							&CLOCK2.CCA,
+							&CLOCK2PIN,
+							&CLOCK2.CTRLA,
+							&CLOCK2.CTRLB,
+							&CLOCK2.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_init_clock	(	&CLOCK3.PER,
+							&CLOCK3.CCA,
+							&CLOCK3PIN,
+							&CLOCK3.CTRLA,
+							&CLOCK3.CTRLB,
+							&CLOCK3.CTRLD,
+							TC_CLKSEL_DIV1_gc
+						);
+
+	timers_set_pulse_width(	&CLOCK0.CCA,
+							&CLOCK0.PER,
+							1000);
+								
+	timers_set_pulse_width(	&CLOCK1.CCA,
+							&CLOCK1.PER,
+							1000);	
+
+	timers_set_pulse_width(	&CLOCK2.CCA,
+							&CLOCK2.PER,
+							1000);	
+
+	timers_set_pulse_width(	&CLOCK3.CCA,
+							&CLOCK3.PER,
+							1000);	
 
 	// Initialize master clock
-	timers_master_init();
+	// 65535 = ~127ms period
+	// 51602 = ~100ms
+	timers_master_init(51602);
 
 	//Initialize USART
 	usart_init();
+
+	//Initialize DMA controller
+	dma_init();
 
 	//Interrupts: enable high priority interrupts in PMIC
 	PMIC.CTRL |= PMIC_HILVLEN_bm;
