@@ -35,7 +35,7 @@ void usart_init(void)
 
 // ===========================================================
 // usart_rxbyte() puts the received byte in the global variable
-// usart_buffer[] and calls the processing function if a
+// usart_buffer[] and calls usart_parsebuffer() if a
 // carriage return (0x0D) is received.
 // ===========================================================
 void usart_rxbyte(uint8_t rxbyte) {
@@ -58,6 +58,10 @@ void usart_rxbyte(uint8_t rxbyte) {
 
 }//end of usart_rxbyte()
 
+// ===========================================================
+// Updates the tau1,tau2, and tau3 pulse trigger delays
+// with the values in the parameters[] array
+// ===========================================================
 void usart_command_t(uint32_t *parameters) {
 
 	volatile uint32_t tau1 = parameters[1];
@@ -86,6 +90,15 @@ void usart_command_t(uint32_t *parameters) {
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
 						tau3					//Tau3 (trigger) delay (us)
 					);
+}//end of usart_command_t()
+
+// ===========================================================
+// Turns off all of the pulse outputs, including the master
+// ===========================================================
+void usart_disable_outputs(void) {
+	
+	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
+
 }
 
 // ===========================================================
@@ -107,7 +120,7 @@ void usart_parsebuffer(void){
 	// doesn't get corrupted
 	USART.CTRLA &= USART_RXCINTLVL_OFF_gc;
 
-	// Extract first string
+	// Extract first substring (command)
 	usart_substring[++i] = strtok(usart_buffer, delimiter);
 
 	// Store the command as single ASCII character
@@ -125,6 +138,10 @@ void usart_parsebuffer(void){
 		case 'T':
 			usart_command_t(parameter_array);
 			break;
+
+		case 'X':
+		usart_disable_outputs();
+		break;
 		default:
 			//flash the LEDs
 			for (uint8_t i=0; i<10; i++){

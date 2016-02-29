@@ -134,7 +134,7 @@ int main(void)
 	configure_system_clock_pll();
 
 	// Initialize master clock
-	timers_master_init(50000);
+	timers_master_init(100000);
 
 	// Tau0/Master pulse initialization
 	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
