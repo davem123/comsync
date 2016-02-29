@@ -3,8 +3,13 @@
 // ===========================================================
 // Master clock timer initialization
 // ===========================================================
-void timers_master_init(uint16_t period)
+void timers_master_init(float period_us)
 {
+	// 65534 = ~127ms period at clkPER4 = 128MHz and /256 prescaler.
+	// 51602 = ~100ms
+
+	uint16_t per_value = ( period_us / MAX_PERIOD_MICROSECONDS) * 65534;
+
 	// Enable hi-res extension for timer C0
 	HIRESC.CTRL = HIRES_HREN_TC0_gc;
 
@@ -12,7 +17,7 @@ void timers_master_init(uint16_t period)
 	// The two lsb of the timer/counter period register
 	// must be set to zero to ensure correct operation
 	// (datasheet p. 186)
-	MASTER.PER = period & 0xFFFC;
+	MASTER.PER = per_value & 0xFFFC;
 
 	// Start Timer with Clk/64 prescaling
 	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV256_gc;
@@ -41,16 +46,14 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 	
 	volatile uint16_t cca_value;
 
-	// Set compare value n
-	// n = (tau/128) * 65535
-	// 65535/128 = 511.99
-	/*if (tau >= 127)
-		cca_value = 0xFFFF;
-	else
-		cca_value = tau * 512;
-	*/
+	// Resolution (4 counts) = 220ns
+	// (Two least significant bits are not used in hi-res mode)
 	
-	cca_value = tau;
+	// (tauN + pulsewidthN) MUST be < master period
+
+	// The two lsb of the timer/counter period register
+	// must be set to zero to ensure correct operation
+	cca_value = tau & 0xFFFC;
 
 	//MASTER.CCn = tau;
 	_SFR_MEM16(addr_ccN) = cca_value;

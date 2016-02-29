@@ -28,10 +28,12 @@
 #define CLOCK2PIN			PORTF.PIN0CTRL
 #define CLOCK3PIN			PORTF.PIN4CTRL
 
+#define MAX_PERIOD_MICROSECONDS	127000
+
 // ===========================================================
 // Function Prototypes
 // ===========================================================
-void timers_master_init(uint16_t period);
+void timers_master_init(float period);
 
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,

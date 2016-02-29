@@ -63,7 +63,7 @@ void configure_system_clock_pll(void) {
 	// Disable the other oscillators.
 	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );
 	
-}//end of configure_pll()
+}//end of configure_system_clock_pll()
 
 // ===========================================================
 // INTERRUPT HANDLERS
@@ -136,6 +136,10 @@ int main(void)
 	// ClkPER4 = 128MHz
 	configure_system_clock_pll();
 
+
+	// Initialize master clock
+	timers_master_init(50000);
+
 	// Tau0/Master pulse initialization
 	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
 						&MASTER.CTRLB,			//Address of CTRLB
@@ -151,14 +155,14 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						20						//TauN (trigger) delay
+						0						//TauN (trigger) delay
 					);
 	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
 						&MASTER.CTRLB,			//Address of CTRLB
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						21						//TauN (trigger) delay (ms)
+						0						//TauN (trigger) delay (ms)
 					);
 
 	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
@@ -166,7 +170,7 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						22						//TauN (trigger) delay (ms)
+						0						//TauN (trigger) delay (ms)
 					);
 
 	
@@ -221,11 +225,6 @@ int main(void)
 	timers_set_pulse_width(	&CLOCK3.CCA,
 							&CLOCK3.PER,
 							1000);	
-
-	// Initialize master clock
-	// 65535 = ~127ms period
-	// 51602 = ~100ms
-	timers_master_init(51602);
 
 	//Initialize USART
 	usart_init();
