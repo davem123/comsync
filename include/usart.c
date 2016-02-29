@@ -51,11 +51,11 @@ void usart_rxbyte(uint8_t rxbyte) {
 			USART.DATA = 0x0a;
 			usart_parsebuffer();
 		}
-		
 		else {
 			usart_buffer[usart_counter] = rxbyte;
 			usart_counter++;
 		}//end of usart if/else
+
 }//end of usart_rxbyte()
 
 void usart_command_t(uint32_t *parameters) {
@@ -135,7 +135,12 @@ void usart_parsebuffer(void){
 			}
 			break;
 	}//end of switch statement
-	
+
+	// Clear the USART buffer by filling it with null characters
+	for (int i=0; i<=50; i++){
+		usart_buffer[i] = 0;
+	}
+
 	// Write the next byte to the beginning of the buffer
 	usart_counter = 0;
 

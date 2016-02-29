@@ -44,7 +44,9 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						uint32_t tau_us
 					) {
 	
-	volatile uint16_t cca_value = ( (float) tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
+	volatile uint16_t cca_value;
+	
+	cca_value = ( (float) tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
 
 	// Resolution (4 counts) = 220ns
 	// (Two least significant bits are not used in hi-res mode)
@@ -56,7 +58,7 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 	//cca_value = tau & 0xFFFC;
 
 	//MASTER.CCn = tau;
-	_SFR_MEM16(addr_ccN) = cca_value & 0xFFFC;
+	_SFR_MEM16(addr_ccN) = (cca_value & 0xFFFC);
 
 	// Enable capture/compare channel A
 	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;

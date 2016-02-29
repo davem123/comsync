@@ -99,14 +99,11 @@ ISR(TAU3_VECT) // CompareD interrupt vector
 }//end of CompareC ISR
 
 ISR(USART_VECT){
+
 	uint8_t rec_char;
-
-	// Wait until the data is received
-	//while( !(USART.STATUS & USART_RXCIF_bm))
-
 	//Reading the data clears the interrupt flag
 	rec_char = USART.DATA;
-	//usart_rxbyte(rec_char);
+	usart_rxbyte(rec_char);
 	
 }//end of USART RX ISR
 
@@ -154,14 +151,14 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						10000					//TauN (trigger) delay (us)
+						119						//TauN (trigger) delay (us)
 					);
 	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
 						&MASTER.CTRLB,			//Address of CTRLB
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						20000					//TauN (trigger) delay (us)
+						120						//TauN (trigger) delay (us)
 					);
 
 	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
@@ -169,7 +166,7 @@ int main(void)
 						&MASTER.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						30000					//TauN (trigger) delay (us)
+						121						//TauN (trigger) delay (us)
 					);
 
 	
@@ -243,14 +240,9 @@ int main(void)
 	// Enable global interrupts once all the setup is done
 	sei();
 
-	//usart_parsebuffer();
-
 	//Infinite Loop - waiting for USART commands
 	while (1)
 	{
-		#ifdef DEBUG
-			asm("nop");
-		#endif
 	}//end of while() loop
 
 }//end of main()
