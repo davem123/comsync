@@ -1,11 +1,12 @@
 #include "usart.h"
 #include "board.h"
 #include "timers.h"
+#include <string.h>
 
 // ===========================================================
 // Global variables
 // ===========================================================
-volatile uint8_t usart_buffer[] = "EMPTYBUFFEREMPTYBUFFER";
+char usart_buffer[50];
 volatile uint8_t usart_counter = 0;
 
 // ===========================================================
@@ -16,10 +17,6 @@ void usart_init(void)
 
 	USART_PORT.DIRSET = PIN3_bm;   // Pin 3 (TX) as output.
 	USART_PORT.DIRCLR = PIN2_bm;   // Pin 2 (RX) as input.
-
-	// USART, 8 Data bits, Even Parity, 1 Stop bit, Asynchronous
-//	USART.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | false;
-//	USART.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_EVEN_gc | USART_CMODE_ASYNCHRONOUS_gc;
 
 	// USART, 8 Data bits, No Parity, Asynchronous
 	USART.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | USART_CMODE_ASYNCHRONOUS_gc;
@@ -60,38 +57,73 @@ void usart_rxbyte(uint8_t rxbyte) {
 			usart_counter++;
 		}//end of usart if/else
 }//end of usart_rxbyte()
-/*
-uint16_t *usart_command_t(void) {
 
-	static uint16_t tau_ints[3];
+void usart_command_t(uint32_t *parameters) {
 
-	uint32_t tau1,tau2,tau3;
+	volatile uint32_t tau1 = parameters[1];
+	volatile uint32_t tau2 = parameters[2];
+	volatile uint32_t tau3 = parameters[3];
 
-	//Convert the ASCII data values to 16-bit integers,
-	//then return as a 1D array
+	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCBEN_bm,			//Capture channel bitmask
+						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
+						tau1					//Tau1 (trigger) delay (us)
+					);
+	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCCEN_bm,			//Capture channel bitmask
+						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
+						tau2					//Tau2 (trigger) delay (us)
+					);
 
-	return tau_ints;
+	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
+						&MASTER.CTRLB,			//Address of CTRLB
+						&MASTER.INTCTRLB,		//Address of INTCTRLB
+						TC0_CCDEN_bm,			//Capture channel bitmask
+						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
+						tau3					//Tau3 (trigger) delay (us)
+					);
 }
-*/
+
 // ===========================================================
 // usart_parsebuffer() processes the commands received on the
 // USART and initiates the requested action.
 // ===========================================================
 void usart_parsebuffer(void){
 
+	char *usart_substring[50];
+	char command;
+
+	uint32_t parameter_array[4];
+
+	const char delimiter[] = ",";
+
+	volatile int i = -1;
+
 	// disable USART interrupts while processing so the data
 	// doesn't get corrupted
 	USART.CTRLA &= USART_RXCINTLVL_OFF_gc;
 
-	unsigned char command = usart_buffer[0];
+	// Extract first string
+	usart_substring[++i] = strtok(usart_buffer, delimiter);
+
+	// Store the command as single ASCII character
+	command = *usart_substring[0];
+
+	// Extract remaining strings, convert to 32-bit long ints,
+	// store in parameter_array[]
+	while ( (usart_substring[++i] = strtok(NULL, delimiter)) != NULL)
+	{
+	   parameter_array[i] = atol(usart_substring[i]);
+	}
 
 	switch (command) {
 
 		case 'T':
-			//usart_command_t();
-			break;
-		case 'X':
-			// disable all of the outputs
+			usart_command_t(parameter_array);
 			break;
 		default:
 			//flash the LEDs

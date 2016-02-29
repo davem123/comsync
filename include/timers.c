@@ -3,12 +3,12 @@
 // ===========================================================
 // Master clock timer initialization
 // ===========================================================
-void timers_master_init(float period_us)
+void timers_master_init(uint32_t period_us)
 {
 	// 65534 = ~127ms period at clkPER4 = 128MHz and /256 prescaler.
 	// 51602 = ~100ms
 
-	uint16_t per_value = ( period_us / MAX_PERIOD_MICROSECONDS) * 65534;
+	uint16_t per_value = ( (float) period_us / MAX_PERIOD_MICROSECONDS) * 65534;
 
 	// Enable hi-res extension for timer C0
 	HIRESC.CTRL = HIRES_HREN_TC0_gc;
@@ -41,10 +41,10 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_intctrlb,
 						uint8_t capture_ch_bm,
 						uint8_t interrupt_level_bm,
-						float tau_us
+						uint32_t tau_us
 					) {
 	
-	uint16_t cca_value = ( tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
+	volatile uint16_t cca_value = ( (float) tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
 
 	// Resolution (4 counts) = 220ns
 	// (Two least significant bits are not used in hi-res mode)

@@ -136,7 +136,6 @@ int main(void)
 	// ClkPER4 = 128MHz
 	configure_system_clock_pll();
 
-
 	// Initialize master clock
 	timers_master_init(50000);
 
@@ -243,6 +242,8 @@ int main(void)
 
 	// Enable global interrupts once all the setup is done
 	sei();
+
+	//usart_parsebuffer();
 
 	//Infinite Loop - waiting for USART commands
 	while (1)
