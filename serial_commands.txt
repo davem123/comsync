@@ -20,4 +20,8 @@ X: Stop all pulse output immediately
 	Parameters: none
 	Example: "X"
 
+R: Restart pulse output
+	Parameters: <period>
+	Example: "R,100000<cr>" (restart with 100ms period)
+
 <CR>: Finished sending data. Process command.

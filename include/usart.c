@@ -142,6 +142,13 @@ void usart_parsebuffer(void){
 		case 'X':
 		usart_disable_outputs();
 		break;
+
+		// Restart MASTER with the specified period
+		// eg. "R,100000" for 100ms
+		case 'R':
+		timers_master_init(parameter_array[1]);
+		break;
+
 		default:
 			//flash the LEDs
 			for (uint8_t i=0; i<10; i++){
