@@ -1,27 +1,41 @@
-General command format: "[command],[parameter1],[parameterN]<CR>"
+General command format: "[command],[parameter1],[parameterN]<cr>"
 
 Command List
 ------------
 
-T: Update tau1-tau3 (time between trigger and leading edge of pulse)
-	Parameters: <tau1 in hexadecimal microseconds
-				<tau2 ...>
-				<tau3 ...>
-	
-	Example:	tau1 = 1ms (1000us = 0x03E8)
-				tau2 = 32.5ms (32500us = 0x7EF4)
-				tau3 = 100ms (100000us = 0x186A0)
-
-				"T,1000,32500,100000<cr>"
-
-?: Return information about the current status
-
-X: Stop all pulse output immediately
-	Parameters: none
-	Example: "X"
+M: Set the pulse width of the Master clock
+	Parameters: <pulsewidth in us>
+	Example: "M,1000<cr>" set Master to 1ms pulse width)
 
 R: Restart pulse output
 	Parameters: <period>
 	Example: "R,100000<cr>" (restart with 100ms period)
+
+T: Update tau1-tau3 (time between trigger and leading edge of pulse)
+	Parameters: <tau1 in microseconds
+				<tau2 ...>
+				<tau3 ...>
+	
+	Example:	tau1 = 1ms (1000us)
+				tau2 = 32.5ms (32500us)
+				tau3 = 100ms (100000us)
+
+				"T,1000,32500,100000<cr>"
+
+W: Update Clock1-Clock3 pulse widths
+	Parameters: <Clock1 pulse width in microseconds>
+				<Clock2 ...>
+				<Clock3 ...>
+
+	Example:	Clock1 = 1ms (1000us)
+				Clock2 = 32.5ms (32500us)
+				Clock3 = 100ms (100000us)
+
+				"W,1000,32500,100000<cr>"
+
+
+X: Stop all pulse output immediately
+	Parameters: none
+	Example: "X"
 
 <CR>: Finished sending data. Process command.

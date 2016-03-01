@@ -102,6 +102,25 @@ void usart_disable_outputs(void) {
 }
 
 // ===========================================================
+// Update the pulse widths of the three slave clock outputs
+// ===========================================================
+void usart_update_pulsewidths(uint32_t *parameters) {
+
+	timers_set_pulse_width(	&CLOCK1.CCA,
+							&CLOCK1.PER,
+							parameters[1]);	
+
+	timers_set_pulse_width(	&CLOCK2.CCA,
+							&CLOCK2.PER,
+							parameters[2]);	
+
+	timers_set_pulse_width(	&CLOCK3.CCA,
+							&CLOCK3.PER,
+							parameters[3]);	
+
+}
+
+// ===========================================================
 // usart_parsebuffer() processes the commands received on the
 // USART and initiates the requested action.
 // ===========================================================
@@ -113,8 +132,8 @@ void usart_parsebuffer(void){
 	uint32_t parameter_array[4];
 
 	const char delimiter[] = ",";
-
-	volatile int i = -1;
+	
+	int i = -1;
 
 	// disable USART interrupts while processing so the data
 	// doesn't get corrupted
@@ -135,19 +154,31 @@ void usart_parsebuffer(void){
 
 	switch (command) {
 
+		// Set the pulse width of the master clock
+		// (CLOCK0)
+		case 'M':
+			timers_set_pulse_width(	&CLOCK0.CCA,
+									&CLOCK0.PER,
+									parameter_array[1] );
+			break;
+		
+		// Restart MASTER with the specified period
+		// eg. "R,100000" for 100ms
+		case 'R':
+			timers_master_init(parameter_array[1]);
+			break;
+
 		case 'T':
 			usart_update_taus(parameter_array);
 			break;
 
-		case 'X':
-		usart_disable_outputs();
-		break;
+		case 'W':
+			usart_update_pulsewidths(parameter_array);
+			break;
 
-		// Restart MASTER with the specified period
-		// eg. "R,100000" for 100ms
-		case 'R':
-		timers_master_init(parameter_array[1]);
-		break;
+		case 'X':
+			usart_disable_outputs();
+			break;
 
 		default:
 			//flash the LEDs

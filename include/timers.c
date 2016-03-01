@@ -125,24 +125,20 @@ void timers_init_clock	(	volatile uint16_t *addr_per,
 // ===========================================================
 void timers_set_pulse_width(volatile uint16_t *addr_cca,
 							volatile uint16_t *addr_per,
-							uint16_t pulse_width) {
-
-	uint16_t pulse_width_us = pulse_width;
+							volatile uint16_t pulse_width_us) {
+	
+	uint16_t pulse_width_cycles, cca_value;
 
 	// For a 16-bit timer and 32MHz clock with Clk/1 prescaler:
 	// maximum pulse width (us) = (2^16 / F_CPU_MHZ) - 1 = 2047us
 
-	// Reduce too-wide pulses to the maximum width
-	if (pulse_width_us > 2047)
-		pulse_width_us = 2047;
-
 	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
 	// where timer_clock = F_CPU / prescaler
 	
-	uint16_t pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
+	pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
 	
 	// pulse width (cycles) = TOP - CCA
-	uint16_t cca_value = (65535 - pulse_width_cycles);
+	cca_value = (65535 - pulse_width_cycles);
 
 	// CCA controls the PWM duty cycle
 	_SFR_MEM16(addr_cca) = cca_value;
