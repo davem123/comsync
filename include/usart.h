@@ -28,6 +28,6 @@ void usart_init(void);
 void usart_rxbyte(uint8_t rxbyte);
 void usart_parsebuffer(void);
 
-void usart_command_t(uint32_t *parameters);
+void usart_update_taus(uint32_t *parameters);
 void usart_disable_outputs(void);
 

@@ -62,7 +62,7 @@ void usart_rxbyte(uint8_t rxbyte) {
 // Updates the tau1,tau2, and tau3 pulse trigger delays
 // with the values in the parameters[] array
 // ===========================================================
-void usart_command_t(uint32_t *parameters) {
+void usart_update_taus(uint32_t *parameters) {
 
 	volatile uint32_t tau1 = parameters[1];
 	volatile uint32_t tau2 = parameters[2];
@@ -90,7 +90,7 @@ void usart_command_t(uint32_t *parameters) {
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
 						tau3					//Tau3 (trigger) delay (us)
 					);
-}//end of usart_command_t()
+}//end of usart_update_taus()
 
 // ===========================================================
 // Turns off all of the pulse outputs, including the master
@@ -136,7 +136,7 @@ void usart_parsebuffer(void){
 	switch (command) {
 
 		case 'T':
-			usart_command_t(parameter_array);
+			usart_update_taus(parameter_array);
 			break;
 
 		case 'X':
