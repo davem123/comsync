@@ -78,25 +78,25 @@ ISR(TAU0_VECT) // CompareA interrupt vector
 {
 	// DMA controller does this:
 	// CLOCK0.CNT = CLOCK0.CCA;
-}//end of CompareD ISR
+}//end of CompareA ISR
 
 ISR(TAU1_VECT) // CompareB interrupt vector
 {
 	// DMA controller does this:
-	// DMA.CH1.CTRLA |= DMA_CH_TRFREQ_bm;
-}//end of CompareA ISR
+	// CLOCK1.CNT = CLOCK1.CCA;
+}//end of CompareB ISR
 
 ISR(TAU2_VECT) // CompareC interrupt vector
 {
 	// DMA controller does this:
 	// CLOCK2.CNT = CLOCK2.CCA;
-}//end of CompareB ISR
+}//end of CompareC ISR
 
 ISR(TAU3_VECT) // CompareD interrupt vector
 {
 	// DMA controller does this:
 	// CLOCK3.CNT = CLOCK3.CCA;
-}//end of CompareC ISR
+}//end of CompareD ISR
 
 ISR(USART_VECT){
 
