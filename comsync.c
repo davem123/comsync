@@ -176,7 +176,7 @@ int main(void)
 							&CLOCK0.CTRLA,		//Address of CLOCK0.CTRLA
 							&CLOCK0.CTRLB,		//Address of CLOCK0.CTRLB
 							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
-							TC_CLKSEL_DIV1_gc	//Timer prescaler bitmask
+							TC_CLKSEL_DIV8_gc	//Timer prescaler bitmask
 						);
 
 	timers_init_clock	(	&CLOCK1.PER,
@@ -185,7 +185,7 @@ int main(void)
 							&CLOCK1.CTRLA,
 							&CLOCK1.CTRLB,
 							&CLOCK1.CTRLD,
-							TC_CLKSEL_DIV1_gc
+							TC_CLKSEL_DIV8_gc
 						);
 
 	timers_init_clock	(	&CLOCK2.PER,
@@ -194,7 +194,7 @@ int main(void)
 							&CLOCK2.CTRLA,
 							&CLOCK2.CTRLB,
 							&CLOCK2.CTRLD,
-							TC_CLKSEL_DIV1_gc
+							TC_CLKSEL_DIV8_gc
 						);
 
 	timers_init_clock	(	&CLOCK3.PER,
@@ -203,24 +203,24 @@ int main(void)
 							&CLOCK3.CTRLA,
 							&CLOCK3.CTRLB,
 							&CLOCK3.CTRLD,
-							TC_CLKSEL_DIV1_gc
+							TC_CLKSEL_DIV8_gc
 						);
 
 	timers_set_pulse_width(	&CLOCK0.CCA,
 							&CLOCK0.PER,
-							1000);
+							10000);
 								
 	timers_set_pulse_width(	&CLOCK1.CCA,
 							&CLOCK1.PER,
-							1000);	
+							10000);	
 
 	timers_set_pulse_width(	&CLOCK2.CCA,
 							&CLOCK2.PER,
-							1000);	
+							10000);	
 
 	timers_set_pulse_width(	&CLOCK3.CCA,
 							&CLOCK3.PER,
-							1000);	
+							10000);	
 
 	//Initialize USART
 	usart_init();

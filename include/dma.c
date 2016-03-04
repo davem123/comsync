@@ -93,8 +93,8 @@ void dma_init(void) {
 	DMA.CH2.SRCADDR2 = 0;
 
 	// Destination: CLOCK2.CNT
-	DMA.CH2.DESTADDR0 = ( ( (uint16_t) CLOCK1_CNT_ADDR) >> 0 ) & 0xFF;
-	DMA.CH2.DESTADDR1 = ( ( (uint16_t) CLOCK1_CNT_ADDR) >> 8 ) & 0xFF;
+	DMA.CH2.DESTADDR0 = ( ( (uint16_t) CLOCK2_CNT_ADDR) >> 0 ) & 0xFF;
+	DMA.CH2.DESTADDR1 = ( ( (uint16_t) CLOCK2_CNT_ADDR) >> 8 ) & 0xFF;
 	DMA.CH2.DESTADDR2 = 0;
 
 	//====================

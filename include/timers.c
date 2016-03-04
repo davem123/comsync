@@ -135,7 +135,7 @@ void timers_set_pulse_width(volatile uint16_t *addr_cca,
 	// pulse width (cycles) = pulse_width_us * timer_clock(MHz)
 	// where timer_clock = F_CPU / prescaler
 	
-	pulse_width_cycles = pulse_width_us * F_CPU_MHZ;
+	pulse_width_cycles = pulse_width_us * (F_CPU_MHZ / 8);
 	
 	// pulse width (cycles) = TOP - CCA
 	cca_value = (65535 - pulse_width_cycles);
