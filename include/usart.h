@@ -1,3 +1,6 @@
+#ifndef USART_H
+#define USART_H
+
 #include "avr_compiler.h"
 #include "delays.h"
 
@@ -33,3 +36,4 @@ void usart_update_taus(uint32_t *parameters);
 
 void usart_disable_outputs(void);
 
+#endif

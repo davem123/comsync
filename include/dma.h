@@ -1,3 +1,6 @@
+#ifndef DMA_H
+#define DMA_H
+
 #include "avr_compiler.h"
 
 void dma_init(void);
@@ -14,3 +17,5 @@ void dma_init(void);
 #define CLOCK1_CNT_ADDR		0x0960	//TCD1
 #define CLOCK2_CNT_ADDR		0x0A60	//TCE1
 #define CLOCK3_CNT_ADDR		0x0B60	//TCF1
+
+#endif

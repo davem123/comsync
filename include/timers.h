@@ -1,3 +1,6 @@
+#ifndef TIMERS_H
+#define TIMERS_H
+
 #include "avr_compiler.h"
 
 // Set CPU frequency = 32MHz
@@ -58,3 +61,5 @@ void timers_set_pulse_width(volatile uint16_t *addr_cca,
 							volatile uint16_t *addr_per,
 							uint16_t pulse_width
 							);
+
+#endif
