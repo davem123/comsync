@@ -117,6 +117,10 @@ int main(void)
 	cli();
 
 	// Configure DIOs
+
+	PORTC.DIR = 0xFF; //All outputs
+	PORTC.OUT = 0x00;
+
 	PORTD.DIR = 0xFF; //All outputs
 	PORTD.OUT = 0x00;
 	
