@@ -17,20 +17,45 @@ void timers_master_init(uint32_t period_us)
 	// The two lsb of the timer/counter period register
 	// must be set to zero to ensure correct operation
 	// (datasheet p. 186)
-	MASTER.PER = per_value & 0xFFFC;
+	MASTERL.PER = per_value & 0xFFFC;
 
 	// Start Timer with Clk/64 prescaling
-	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV256_gc;
+	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV256_gc;
 
 	// Enable overflow interrupt level high
-	//MASTER.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	//MASTERL.INTCTRLA = TC_OVFINTLVL_HI_gc;
 	// Disable overflow interrupt
-	MASTER.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+	MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 	// Restart Timer
-	MASTER.CTRLFSET = TC_CMD_RESTART_gc;
+	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
 
-}//end of master_init()
+}//end of timers_master_init()
+
+// ===========================================================
+// 32-bit master clock made up of cascading 16-bit timers
+// MASTERL and MASTERH
+//
+// Both timers must be "type 0" because four CCP channels
+// are needed for CLOCK[0..4]
+//
+// MASTERL CCP channels: For tau values < [ 2^16 * (1/F_CPU)]
+// MASTERH CCP channels: For tau values > [ 2^16 * (1/F_CPU)]
+// ===========================================================
+void timers_master_init32(uint16_t per_value){
+
+	MASTERL.PER = per_value;
+
+	// Start Timer with no prescaling
+	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
+
+	// Disable overflow interrupt
+	MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+
+	// Restart Timer
+	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
+
+}//end of timers_master_32bit()
 
 // ===========================================================
 // Tau (trigger delay) initialization

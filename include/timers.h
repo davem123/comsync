@@ -11,7 +11,8 @@
 // Timer Configuration Macros
 // ===========================================================
 #define MASTER_OVF_VECT		TCC0_OVF_vect
-#define MASTER				TCC0
+#define MASTERL				TCC0
+#define MASTERH				TCD0
 
 #define TAU0_VECT			TCC0_CCA_vect
 #define TAU1_VECT			TCC0_CCB_vect
@@ -34,6 +35,7 @@
 // Function Prototypes
 // ===========================================================
 void timers_master_init(uint32_t period_us);
+void timers_master_init32(uint16_t per_value);
 
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,

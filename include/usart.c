@@ -68,24 +68,24 @@ void usart_update_taus(uint32_t *parameters) {
 	volatile uint32_t tau2 = parameters[2];
 	volatile uint32_t tau3 = parameters[3];
 
-	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCB,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
 						tau1					//Tau1 (trigger) delay (us)
 					);
-	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCC,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
 						tau2					//Tau2 (trigger) delay (us)
 					);
 
-	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
 						tau3					//Tau3 (trigger) delay (us)
@@ -97,7 +97,7 @@ void usart_update_taus(uint32_t *parameters) {
 // ===========================================================
 void usart_disable_outputs(void) {
 	
-	MASTER.CTRLA = ( MASTER.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
+	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
 
 }
 
@@ -162,7 +162,7 @@ void usart_parsebuffer(void){
 									parameter_array[1] );
 			break;
 		
-		// Restart MASTER with the specified period
+		// Restart MASTERL with the specified period
 		// eg. "R,100000" for 100ms
 		case 'R':
 			timers_master_init(parameter_array[1]);

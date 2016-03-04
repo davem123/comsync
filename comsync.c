@@ -141,33 +141,33 @@ int main(void)
 	timers_master_init(100000);
 
 	// Tau0/Master pulse initialization
-	timers_tau_init(	&MASTER.CCA,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCAEN_bm,			//Capture channel bitmask
 						TC_CCAINTLVL_HI_gc,		//Interrupt level bitmask
 						0						//TauN (trigger) delay (us)
 					);
 
 	// Tau1-3/slave pulses initialization
-	timers_tau_init(	&MASTER.CCB,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCB,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
 						119						//TauN (trigger) delay (us)
 					);
-	timers_tau_init(	&MASTER.CCC,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCC,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
 						120						//TauN (trigger) delay (us)
 					);
 
-	timers_tau_init(	&MASTER.CCD,			//Address of CCP value
-						&MASTER.CTRLB,			//Address of CTRLB
-						&MASTER.INTCTRLB,		//Address of INTCTRLB
+	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
+						&MASTERL.CTRLB,			//Address of CTRLB
+						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
 						121						//TauN (trigger) delay (us)
