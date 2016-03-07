@@ -68,9 +68,9 @@ void configure_system_clock_pll(void) {
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(MASTER_OVF_VECT) // MASTER overflow
+ISR(MASTERH_OVF_VECT) // MASTER overflow
 {
-	//PORTD.OUTTGL = 0x08;
+	PORTE.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
 //Tau0/Clock0 is the master clock output.

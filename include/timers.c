@@ -84,8 +84,10 @@ void timers_master_init32(volatile float period_us){
 		// Start Timer with no prescaling, use event channel 0 as the clock
 		MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
 		
+		// Enable overflow interrupt for testing
+		//MASTERH.INTCTRLA = RTC_OVFINTLVL_HI_gc;
 		// Disable overflow interrupt
-		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+		MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 		// Restart Timer
 		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
@@ -128,6 +130,23 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 	_SFR_MEM16(addr_intctrlb) |= interrupt_level_bm;
 
 }//end of timers_tau_init()
+
+// ===========================================================
+// Tau (trigger delay) initialization
+// Modifies the registers of timer "MASTER"
+// ===========================================================
+void timers_tau_init32(	uint8_t capture_ch_bm,
+						uint8_t interrupt_level_bm,
+						uint32_t tau_us
+					) {
+
+	// Enable selected capture/compare channel
+	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
+
+	//Enable selected compare channel interrupt level
+	_SFR_MEM16(addr_intctrlb) |= interrupt_level_bm;
+
+}//end of timers_tau_init32()
 
 // ===========================================================
 // Clock (pulse) initialization
