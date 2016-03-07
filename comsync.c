@@ -138,7 +138,7 @@ int main(void)
 	configure_system_clock_pll();
 
 	// Initialize master clock
-	timers_master_init(100000);
+	timers_master_init32(100000);
 
 	// Tau0/Master pulse initialization
 	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value
@@ -155,14 +155,14 @@ int main(void)
 						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCBEN_bm,			//Capture channel bitmask
 						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						119						//TauN (trigger) delay (us)
+						0						//TauN (trigger) delay (us)
 					);
 	timers_tau_init(	&MASTERL.CCC,			//Address of CCP value
 						&MASTERL.CTRLB,			//Address of CTRLB
 						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCCEN_bm,			//Capture channel bitmask
 						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						120						//TauN (trigger) delay (us)
+						0						//TauN (trigger) delay (us)
 					);
 
 	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
@@ -170,7 +170,7 @@ int main(void)
 						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						121						//TauN (trigger) delay (us)
+						0						//TauN (trigger) delay (us)
 					);
 
 	
@@ -212,19 +212,19 @@ int main(void)
 
 	timers_set_pulse_width(	&CLOCK0.CCA,
 							&CLOCK0.PER,
-							10000);
+							100);
 								
 	timers_set_pulse_width(	&CLOCK1.CCA,
 							&CLOCK1.PER,
-							10000);	
+							100);	
 
 	timers_set_pulse_width(	&CLOCK2.CCA,
 							&CLOCK2.PER,
-							10000);	
+							100);	
 
 	timers_set_pulse_width(	&CLOCK3.CCA,
 							&CLOCK3.PER,
-							10000);	
+							100);	
 
 	//Initialize USART
 	usart_init();

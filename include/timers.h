@@ -34,11 +34,14 @@
 
 #define MAX_PERIOD_MICROSECONDS	127000
 
+// 31.25ns = 1/32MHz
+#define TIMER_PERIOD		3.125E-2
+
 // ===========================================================
 // Function Prototypes
 // ===========================================================
 void timers_master_init(uint32_t period_us);
-void timers_master_init32(uint16_t per_value);
+void timers_master_init32(float period_us);
 
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,

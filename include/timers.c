@@ -42,9 +42,22 @@ void timers_master_init(uint32_t period_us)
 // MASTERL CCP channels: For tau values < [ 2^16 * (1/F_CPU)]
 // MASTERH CCP channels: For tau values > [ 2^16 * (1/F_CPU)]
 // ===========================================================
-void timers_master_init32(uint16_t per_value){
+void timers_master_init32(volatile float period_us){
 
-	MASTERL.PER = per_value;
+	volatile uint32_t per_value = 0;
+	volatile uint16_t periodhigh = 0;
+	volatile uint16_t periodlow = 0;
+
+	per_value = (float) period_us / TIMER_PERIOD;
+
+	periodlow = ((uint32_t) per_value >> 0) & 0x0000FFFF;
+	periodhigh = ((uint32_t) per_value >> 16) & 0x0000FFFF;
+
+	// ===========================================================
+	// LEAST SIGNIFICANT TIMER
+	// Only this timer is needed for periods <= 0x0000FFFF
+	// ===========================================================
+	MASTERL.PER = periodlow;
 
 	// Start Timer with no prescaling
 	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -55,7 +68,30 @@ void timers_master_init32(uint16_t per_value){
 	// Restart Timer
 	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
 
-}//end of timers_master_32bit()
+	// ===========================================================
+	// MOST SIGNIFICANT TIMER
+	// If the period is greater than 0x0000FFFF then another 
+	// timer (MASTERH) is used to enable 32-bit operation
+	// ===========================================================
+
+	if (periodhigh > 0) {
+
+		MASTERH.PER = periodhigh;
+
+		// Select Timer C0 overflow as the source for event channel 0
+		EVSYS.CH0MUX |= EVSYS_CHMUX_TCC0_OVF_gc;
+
+		// Start Timer with no prescaling, use event channel 0 as the clock
+		MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
+		
+		// Disable overflow interrupt
+		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+
+		// Restart Timer
+		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
+	}
+
+}//end of timers_master_init32()
 
 // ===========================================================
 // Tau (trigger delay) initialization
