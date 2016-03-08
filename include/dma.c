@@ -1,4 +1,5 @@
 #include "dma.h"
+#include "timers.h"
 
 // ===========================================================
 // DMA Controller setup
@@ -25,8 +26,14 @@ void dma_init(void) {
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH0.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
-	// DMA transfer triggered by TCC0 CCA (TAU0_VECT) interrupt
-	DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCA_gc;
+	// DMA transfer triggered by CCA (TAU0_VECT) interrupt
+	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
+	if (MASTERH.PER > 0) {
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCA_gc;
+	}
+	else {
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCA_gc;
+	}
 
 	// Source: CLOCK0.CCA
 	DMA.CH0.SRCADDR0 = ( ( (uint16_t) CLOCK0_CCA_ADDR) >> 0 ) & 0xFF;
@@ -55,8 +62,14 @@ void dma_init(void) {
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH1.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
-	// DMA transfer triggered by TCC0 CCB (TAU1_VECT) interrupt
-	DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCB_gc;
+	// DMA transfer triggered by CCB (TAU1_VECT) interrupt
+	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
+	if (MASTERH.PER > 0) {
+		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCB_gc;
+	}
+	else {
+		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCB_gc;
+	}
 
 	// Source: CLOCK1.CCA
 	DMA.CH1.SRCADDR0 = ( ( (uint16_t) CLOCK1_CCA_ADDR) >> 0 ) & 0xFF;
@@ -84,8 +97,14 @@ void dma_init(void) {
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH2.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
-	// DMA transfer triggered by TCC0 CCC (TAU2_VECT) interrupt
-	DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCC_gc;
+	// DMA transfer triggered by CCC (TAU2_VECT) interrupt
+	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
+	if (MASTERH.PER > 0) {
+		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCC_gc;
+	}
+	else {
+		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCC_gc;
+	}
 
 	// Source: CLOCK2.CCA
 	DMA.CH2.SRCADDR0 = ( ( (uint16_t) CLOCK2_CCA_ADDR) >> 0 ) & 0xFF;
@@ -113,8 +132,14 @@ void dma_init(void) {
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH3.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
-	// DMA transfer triggered by TCC0 CCD (TAU3_VECT) interrupt
-	DMA.CH3.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCD_gc;
+	// DMA transfer triggered by CCD (TAU3_VECT) interrupt
+	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
+	if (MASTERH.PER > 0) {
+		DMA.CH3.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCD_gc;
+	}
+	else {
+		DMA.CH3.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCD_gc;
+	}
 
 	// Source: CLOCK3.CCA
 	DMA.CH3.SRCADDR0 = ( ( (uint16_t) CLOCK3_CCA_ADDR) >> 0 ) & 0xFF;

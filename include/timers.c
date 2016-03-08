@@ -1,4 +1,5 @@
 #include "timers.h"
+#include "dma.h"
 
 // ===========================================================
 // Master clock timer initialization
@@ -44,9 +45,9 @@ void timers_master_init(uint32_t period_us)
 // ===========================================================
 void timers_master_init32(volatile float period_us){
 
-	volatile uint32_t per_value = 0;
-	volatile uint16_t periodhigh = 0;
-	volatile uint16_t periodlow = 0;
+	volatile uint32_t per_value;
+	volatile uint16_t periodhigh;
+	volatile uint16_t periodlow;
 
 	per_value = (float) period_us / TIMER_PERIOD;
 
@@ -58,6 +59,7 @@ void timers_master_init32(volatile float period_us){
 	// Only this timer is needed for periods <= 0x0000FFFF
 	// ===========================================================
 	MASTERL.PER = periodlow;
+	MASTERH.PER = 0;
 
 	// Start Timer with no prescaling
 	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
@@ -163,11 +165,16 @@ void timers_tau_init32(	uint8_t tau_addr_offset,
 	_SFR_MEM16(addr_ccN) = ccp_value;
 
 	// Enable selected capture/compare channel
-//	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
+	//	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
 
 	// Enable high-priority interrupt
 	// (bitmask is the same for all four CCP channels)
 	_SFR_MEM16(addr_intctrlb) |= TC_CCAINTLVL_HI_gc;
+
+	// Re-initialize DMA controller in case we switched
+	// between MASTERH and MASTERL compare channels
+	dma_init();
+
 
 }//end of timers_tau_init32()
 
