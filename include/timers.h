@@ -17,10 +17,15 @@
 #define MASTERL				TCC0
 #define MASTERH				TCD0
 
-#define TAU0_VECT			TCC0_CCA_vect
-#define TAU1_VECT			TCC0_CCB_vect
-#define TAU2_VECT			TCC0_CCC_vect
-#define TAU3_VECT			TCC0_CCD_vect
+#define TAU0L_VECT			TCC0_CCA_vect
+#define TAU1L_VECT			TCC0_CCB_vect
+#define TAU2L_VECT			TCC0_CCC_vect
+#define TAU3L_VECT			TCC0_CCD_vect
+
+#define TAU0H_VECT			TCD0_CCA_vect
+#define TAU1H_VECT			TCD0_CCB_vect
+#define TAU2H_VECT			TCD0_CCC_vect
+#define TAU3H_VECT			TCD0_CCD_vect
 
 #define CLOCK0				TCC1
 #define CLOCK1				TCD1

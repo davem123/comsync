@@ -73,30 +73,23 @@ ISR(MASTERH_OVF_VECT) // MASTER overflow
 	PORTE.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
-//Tau0/Clock0 is the master clock output.
-ISR(TAU0_VECT) // CompareA interrupt vector
-{
-	// DMA controller does this:
-	// CLOCK0.CNT = CLOCK0.CCA;
-}//end of CompareA ISR
 
-ISR(TAU1_VECT) // CompareB interrupt vector
-{
-	// DMA controller does this:
-	// CLOCK1.CNT = CLOCK1.CCA;
-}//end of CompareB ISR
+// Tau0/Clock0 is the master clock output.
 
-ISR(TAU2_VECT) // CompareC interrupt vector
-{
-	// DMA controller does this:
-	// CLOCK2.CNT = CLOCK2.CCA;
-}//end of CompareC ISR
+// When the TAU interrupt vector is reached,
+// the DMA controller does this:
+// CLOCKn.CNT = CLOCKn.CCA;
+// which triggers a pulse output
 
-ISR(TAU3_VECT) // CompareD interrupt vector
-{
-	// DMA controller does this:
-	// CLOCK3.CNT = CLOCK3.CCA;
-}//end of CompareD ISR
+ISR(TAU0L_VECT){} // MASTERL.CCA vector
+ISR(TAU1L_VECT){} // MASTERL.CCB vector
+ISR(TAU2L_VECT){} // MASTERL.CCC vector
+ISR(TAU3L_VECT){} // MASTERL.CCD vector
+
+ISR(TAU0H_VECT){} // MASTERH.CCA vector
+ISR(TAU1H_VECT){} // MASTERH.CCB vector
+ISR(TAU2H_VECT){} // MASTERH.CCC vector
+ISR(TAU3H_VECT){} // MASTERH.CCD vector
 
 ISR(USART_VECT){
 
