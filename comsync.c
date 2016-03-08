@@ -165,13 +165,18 @@ int main(void)
 						0						//TauN (trigger) delay (us)
 					);
 
-	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
+/*	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
 						&MASTERL.CTRLB,			//Address of CTRLB
 						&MASTERL.INTCTRLB,		//Address of INTCTRLB
 						TC0_CCDEN_bm,			//Capture channel bitmask
 						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
 						0						//TauN (trigger) delay (us)
 					);
+*/
+
+	timers_tau_init32(	TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
+						150						//TauN (trigger) delay (us)
+					 );
 
 	
 	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER

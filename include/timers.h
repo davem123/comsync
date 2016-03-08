@@ -37,6 +37,15 @@
 // 31.25ns = 1/32MHz
 #define TIMER_PERIOD		3.125E-2
 
+
+// ===========================================================
+// Global Variables
+// ===========================================================
+static const uint8_t TAU0offset = 0x28;
+static const uint8_t TAU1offset = 0x2A;
+static const uint8_t TAU2offset = 0x2C;
+static const uint8_t TAU3offset = 0x2E;
+
 // ===========================================================
 // Function Prototypes
 // ===========================================================
@@ -48,6 +57,10 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_intctrlb,
 						uint8_t capture_ch_bm,
 						uint8_t interrupt_level_bm,
+						uint32_t tau_us
+					);
+
+void timers_tau_init32(	uint8_t tau_addr_offset,
 						uint32_t tau_us
 					);
 
@@ -65,4 +78,4 @@ void timers_set_pulse_width(volatile uint16_t *addr_cca,
 							uint16_t pulse_width
 							);
 
-#endif
+#endif

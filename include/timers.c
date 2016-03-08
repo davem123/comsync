@@ -135,16 +135,39 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 // Tau (trigger delay) initialization
 // Modifies the registers of timer "MASTER"
 // ===========================================================
-void timers_tau_init32(	uint8_t capture_ch_bm,
-						uint8_t interrupt_level_bm,
+void timers_tau_init32(	uint8_t tau_addr_offset,
 						uint32_t tau_us
 					) {
 
-	// Enable selected capture/compare channel
-	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
+	volatile uint8_t *addr_ctrlb, *addr_intctrlb, *addr_ccN;
+	volatile uint32_t ccp_value;
 
-	//Enable selected compare channel interrupt level
-	_SFR_MEM16(addr_intctrlb) |= interrupt_level_bm;
+	ccp_value = tau_us * F_CPU_MHZ;
+
+	// Use the MASTERH CCP channels for values of
+	// ccp_value > 0x0000FFFF (tau > 2.048ms)
+	if (ccp_value > 0x0000FFFF) {
+		addr_ctrlb = &MASTERH.CTRLB;
+		addr_intctrlb = &MASTERH.INTCTRLB;
+		addr_ccN = &MASTERH.CTRLA + tau_addr_offset;
+	}
+	// Use the MASTERL CCP channels for
+	// tau values < 2.048ms
+	else {
+		addr_ctrlb = &MASTERL.CTRLB;
+		addr_intctrlb = &MASTERL.INTCTRLB;
+		addr_ccN = &MASTERL.CTRLA + tau_addr_offset;
+	}
+
+	//MASTER.CCn = tau;
+	_SFR_MEM16(addr_ccN) = ccp_value;
+
+	// Enable selected capture/compare channel
+//	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
+
+	// Enable high-priority interrupt
+	// (bitmask is the same for all four CCP channels)
+	_SFR_MEM16(addr_intctrlb) |= TC_CCAINTLVL_HI_gc;
 
 }//end of timers_tau_init32()
 
