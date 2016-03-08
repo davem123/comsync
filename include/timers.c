@@ -43,13 +43,13 @@ void timers_master_init(uint32_t period_us)
 // MASTERL CCP channels: For tau values < [ 2^16 * (1/F_CPU)]
 // MASTERH CCP channels: For tau values > [ 2^16 * (1/F_CPU)]
 // ===========================================================
-void timers_master_init32(volatile float period_us){
+void timers_master_init32(volatile uint32_t period_us){
 
 	volatile uint32_t per_value;
 	volatile uint16_t periodhigh;
 	volatile uint16_t periodlow;
 
-	per_value = (float) period_us / TIMER_PERIOD;
+	per_value = period_us * F_CPU_MHZ;
 
 	periodlow = ((uint32_t) per_value >> 0) & 0x0000FFFF;
 	periodhigh = ((uint32_t) per_value >> 16) & 0x0000FFFF;
