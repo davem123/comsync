@@ -55,7 +55,7 @@ static const uint8_t TAU3offset = 0x2E;
 // Function Prototypes
 // ===========================================================
 void timers_master_init(uint32_t period_us);
-void timers_master_init32(float period_us);
+void timers_master_init32(uint32_t period_us);
 
 void timers_tau_init(	volatile uint16_t *addr_ccN,
 						volatile uint8_t *addr_ctrlb,
