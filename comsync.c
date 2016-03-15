@@ -168,22 +168,22 @@ int main(void)
 */
 	timers_tau_init32(	TAU0_CCA_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						1						//TauN (trigger) delay (us)
+						0						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU1_CCB_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU1offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						2						//TauN (trigger) delay (us)
+						10						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU2_CCC_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU2offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						3						//TauN (trigger) delay (us)
+						20						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU3_CCD_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU3offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						4						//TauN (trigger) delay (us)
+						30						//TauN (trigger) delay (us)
 					 );
 				 	
 	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER

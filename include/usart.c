@@ -129,6 +129,16 @@ void usart_disable_outputs(void) {
 }
 
 // ===========================================================
+// Turns off all of the pulse outputs, including the master
+// ===========================================================
+void usart_disable_outputs32(void) {
+	
+	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
+	MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
+
+}
+
+// ===========================================================
 // Update the pulse widths of the three slave clock outputs
 // ===========================================================
 void usart_update_pulsewidths(uint32_t *parameters) {
@@ -192,7 +202,7 @@ void usart_parsebuffer(void){
 		// Restart MASTERL with the specified period
 		// eg. "R,100000" for 100ms
 		case 'R':
-			timers_master_init(parameter_array[1]);
+			timers_master_init32(parameter_array[1]);
 			break;
 
 		case 'T':
@@ -204,7 +214,7 @@ void usart_parsebuffer(void){
 			break;
 
 		case 'X':
-			usart_disable_outputs();
+			usart_disable_outputs32();
 			break;
 
 		default:
