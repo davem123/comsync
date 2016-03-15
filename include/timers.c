@@ -137,12 +137,14 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 // Tau (trigger delay) initialization
 // Modifies the registers of timer "MASTER"
 // ===========================================================
-void timers_tau_init32(	uint8_t tau_addr_offset,
+void timers_tau_init32(	uint8_t capture_ch_bm,
+						uint8_t tau_addr_offset,
 						uint32_t tau_us
 					) {
 
 	volatile uint8_t *addr_ctrlb, *addr_intctrlb, *addr_ccN;
 	volatile uint32_t ccp_value;
+	volatile uint8_t ccp_interrupt_bm;
 
 	ccp_value = tau_us * F_CPU_MHZ;
 
@@ -165,11 +167,11 @@ void timers_tau_init32(	uint8_t tau_addr_offset,
 	_SFR_MEM16(addr_ccN) = ccp_value;
 
 	// Enable selected capture/compare channel
-	//	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
+	_SFR_MEM16(addr_ctrlb) |= capture_ch_bm;
 
 	// Enable high-priority interrupt
-	// (bitmask is the same for all four CCP channels)
-	_SFR_MEM16(addr_intctrlb) |= TC_CCAINTLVL_HI_gc;
+	ccp_interrupt_bm = (0x03 << (tau_addr_offset % 0x28));
+	_SFR_MEM16(addr_intctrlb) |= ccp_interrupt_bm;
 
 	// Re-initialize DMA controller in case we switched
 	// between MASTERH and MASTERL compare channels

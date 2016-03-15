@@ -51,6 +51,12 @@ static const uint8_t TAU1offset = 0x2A;
 static const uint8_t TAU2offset = 0x2C;
 static const uint8_t TAU3offset = 0x2E;
 
+static const uint8_t TAU0_CCA_bm = 0x10;
+static const uint8_t TAU1_CCB_bm = 0x20;
+static const uint8_t TAU2_CCC_bm = 0x40;
+static const uint8_t TAU3_CCD_bm = 0x80;
+
+
 // ===========================================================
 // Function Prototypes
 // ===========================================================
@@ -65,7 +71,8 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 						uint32_t tau_us
 					);
 
-void timers_tau_init32(	uint8_t tau_addr_offset,
+void timers_tau_init32(	uint8_t capture_ch_bm,
+						uint8_t tau_addr_offset,
 						uint32_t tau_us
 					);
 
