@@ -93,6 +93,33 @@ void usart_update_taus(uint32_t *parameters) {
 }//end of usart_update_taus()
 
 // ===========================================================
+// Updates the tau1,tau2, and tau3 pulse trigger delays
+// with the values in the parameters[] array
+// 32-bit version
+// ===========================================================
+void usart_update_taus32(uint32_t *parameters) {
+
+	volatile uint32_t tau1 = parameters[1];
+	volatile uint32_t tau2 = parameters[2];
+	volatile uint32_t tau3 = parameters[3];
+
+
+	timers_tau_init32(	TAU1_CCB_bm,			//CCP channel bitmask for MASTERx.CTRLB
+						TAU1offset,				//Offset from the address of MASTERx.CTRLA (first register address)
+						tau1					//TauN (trigger) delay (us)
+					 );
+	timers_tau_init32(	TAU2_CCC_bm,			//CCP channel bitmask for MASTERx.CTRLB
+						TAU2offset,				//Offset from the address of MASTERx.CTRLA (first register address)
+						tau2					//TauN (trigger) delay (us)
+					 );
+	timers_tau_init32(	TAU3_CCD_bm,			//CCP channel bitmask for MASTERx.CTRLB
+						TAU3offset,				//Offset from the address of MASTERx.CTRLA (first register address)
+						tau3					//TauN (trigger) delay (us)
+					);
+
+}//end of usart_update_taus()
+
+// ===========================================================
 // Turns off all of the pulse outputs, including the master
 // ===========================================================
 void usart_disable_outputs(void) {

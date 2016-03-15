@@ -131,7 +131,7 @@ int main(void)
 	configure_system_clock_pll();
 
 	// Initialize master clock
-	timers_master_init32(1000);
+	timers_master_init32(2047);
 
 	// Tau0/Master pulse initialization
 /*	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value
@@ -168,22 +168,22 @@ int main(void)
 */
 	timers_tau_init32(	TAU0_CCA_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						100						//TauN (trigger) delay (us)
+						1						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU1_CCB_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU1offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						100						//TauN (trigger) delay (us)
+						2						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU2_CCC_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU2offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						100						//TauN (trigger) delay (us)
+						3						//TauN (trigger) delay (us)
 					 );
 
 	timers_tau_init32(	TAU3_CCD_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU3offset,				//Offset from the address of MASTERx.CTRLA (first register address)
-						100						//TauN (trigger) delay (us)
+						4						//TauN (trigger) delay (us)
 					 );
 				 	
 	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER
