@@ -196,7 +196,7 @@ void usart_parsebuffer(void){
 			break;
 
 		case 'T':
-			usart_update_taus(parameter_array);
+			usart_update_taus32(parameter_array);
 			break;
 
 		case 'W':
