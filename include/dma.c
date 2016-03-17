@@ -153,5 +153,5 @@ void dma_init(void) {
 
 	// Enable DMA controller, double buffer enabled on ch0/1 and ch2/3, 
 	// Channel priority: Ch0 > Ch1 > Ch2 > Ch3
-	DMA.CTRL = DMA_ENABLE_bm | DMA_DBUFMODE_CH01CH23_gc | DMA_PRIMODE_CH0123_gc;
+	DMA.CTRL = DMA_ENABLE_bm | DMA_DBUFMODE_DISABLED_gc | DMA_PRIMODE_CH0123_gc;
 }
