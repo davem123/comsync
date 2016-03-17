@@ -86,10 +86,8 @@ void timers_master_init32(volatile uint32_t period_us){
 		// Start Timer with no prescaling, use event channel 0 as the clock
 		MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
 		
-		// Enable overflow interrupt for testing
-		//MASTERH.INTCTRLA = RTC_OVFINTLVL_HI_gc;
 		// Disable overflow interrupt
-		MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 		// Restart Timer
 		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;

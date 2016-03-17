@@ -16,7 +16,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH0.REPCNT = 0;
 	
-	// Enable Channel 0, single-shot transfer, 2-byte burst.
+	// Enable Channel 0, repeat mode, 2-byte burst.
 	DMA.CH0.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm | DMA_CH_SINGLE_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -27,11 +27,11 @@ void dma_init(void) {
 	DMA.CH0.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
 	// DMA transfer triggered by CCA (TAU0_VECT) interrupt
-	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
-	if (MASTERH.PER > 0) {
+	// Select whichever MASTER timer has CCA enabled
+	if (MASTERH.CTRLB & TC0_CCAEN_bm) {
 		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCA_gc;
 	}
-	else {
+	else if (MASTERL.CTRLB & TC0_CCAEN_bm){
 		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCA_gc;
 	}
 
@@ -52,7 +52,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH1.REPCNT = 0;
 	
-	// Enable Channel 1, single-shot transfer, 2-byte burst.
+	// Enable Channel 1, repeat mode, 2-byte burst.
 	DMA.CH1.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -63,11 +63,11 @@ void dma_init(void) {
 	DMA.CH1.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
 	// DMA transfer triggered by CCB (TAU1_VECT) interrupt
-	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
-	if (MASTERH.PER > 0) {
+	// Select whichever MASTER timer has CCB enabled
+	if (MASTERH.CTRLB & TC0_CCBEN_bm) {
 		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCB_gc;
 	}
-	else {
+	else if (MASTERL.CTRLB & TC0_CCBEN_bm){
 		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCB_gc;
 	}
 
@@ -87,7 +87,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH2.REPCNT = 0;
 	
-	// Enable Channel 2, single-shot transfer, 2-byte burst.
+	// Enable Channel 2, repeat mode, 2-byte burst.
 	DMA.CH2.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -98,11 +98,11 @@ void dma_init(void) {
 	DMA.CH2.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
 	// DMA transfer triggered by CCC (TAU2_VECT) interrupt
-	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
-	if (MASTERH.PER > 0) {
+	// Select whichever MASTER timer has CCC enabled
+	if (MASTERH.CTRLB & TC0_CCCEN_bm) {
 		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCC_gc;
 	}
-	else {
+	else if (MASTERL.CTRLB & TC0_CCCEN_bm){
 		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCC_gc;
 	}
 
@@ -122,7 +122,7 @@ void dma_init(void) {
 	// Repeat forever
 	DMA.CH3.REPCNT = 0;
 	
-	// Enable Channel 3, single-shot transfer, 2-byte burst.
+	// Enable Channel 3, repeat mode, 2-byte burst.
 	DMA.CH3.CTRLA = DMA_CH_ENABLE_bm | DMA_CH_BURSTLEN_2BYTE_gc | DMA_CH_REPEAT_bm;
 
 	// Set "transfer count" aka number of bytes per block transfer
@@ -133,11 +133,11 @@ void dma_init(void) {
 	DMA.CH3.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
 	// DMA transfer triggered by CCD (TAU3_VECT) interrupt
-	// If the period is > 0x0000FFFF, use the MASTERH compare channels.
-	if (MASTERH.PER > 0) {
+	// Select whichever MASTER timer has CCD enabled
+	if (MASTERH.CTRLB & TC0_CCDEN_bm) {
 		DMA.CH3.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCD_gc;
 	}
-	else {
+	else if (MASTERL.CTRLB & TC0_CCDEN_bm){
 		DMA.CH3.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCD_gc;
 	}
 
