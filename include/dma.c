@@ -26,13 +26,13 @@ void dma_init(void) {
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH0.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
 
-	// DMA transfer triggered by CCA (TAU0_VECT) interrupt
-	// Select whichever MASTER timer has CCA enabled
-	if (MASTERH.CTRLB & TC0_CCAEN_bm) {
-		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCA_gc;
+	// DMA transfer triggered by Timer overflow interrupt
+	// Select the most significant timer
+	if (MASTERH.PER > 0) {
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_OVF_gc;
 	}
-	else if (MASTERL.CTRLB & TC0_CCAEN_bm){
-		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCA_gc;
+	else{
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_OVF_gc;
 	}
 
 	// Source: CLOCK0.CCA
