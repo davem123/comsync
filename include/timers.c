@@ -67,6 +67,15 @@ void timers_master_init32(volatile uint32_t period_us){
 	// Disable overflow interrupt
 	MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
+	//Set CCA = PER so we get a pulse every timer cycle
+	MASTERL.CCA = MASTERL.PER;
+
+	// Enable CCA for CLOCK0/TAU0
+	MASTERL.CTRLB |= TC0_CCAEN_bm;
+
+	// Enable high-priority interrupt for CCA
+	MASTERL.INTCTRLB |= TC_CCAINTLVL_HI_gc;
+
 	// Restart Timer
 	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
 
@@ -88,6 +97,20 @@ void timers_master_init32(volatile uint32_t period_us){
 		
 		// Disable overflow interrupt
 		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+
+		// Disable CCA for CLOCK0/TAU0 on MASTERL
+		MASTERL.CTRLB &= ~TC0_CCAEN_bm;
+		// Disable high-priority interrupt for CCA on MASTERL
+		MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
+
+		//Set CCA = PER so we get a pulse every timer cycle
+		MASTERH.CCA = MASTERH.PER;
+
+		// Enable CCA for CLOCK0/TAU0
+		MASTERH.CTRLB |= TC0_CCAEN_bm;
+
+		// Enable high-priority interrupt for CCA
+		MASTERH.INTCTRLB |= TC_CCAINTLVL_HI_gc;
 
 		// Restart Timer
 		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
