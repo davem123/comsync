@@ -58,23 +58,24 @@ void timers_master_init32(volatile uint32_t period_us){
 	// LEAST SIGNIFICANT TIMER
 	// Only this timer is needed for periods <= 0x0000FFFF
 	// ===========================================================
-	MASTERL.PER = periodlow;
+	//MASTERL.PER = periodlow;
+	MASTERL.PER = 0x9C40;
 	MASTERH.PER = 0;
 
 	// Start Timer with no prescaling
 	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
 	// Enable overflow interrupt
-	MASTERL.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	//MASTERL.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 	//Set CCA = PER so we get a pulse every timer cycle
-	//MASTERL.CCA = MASTERL.PER;
+	MASTERL.CCA = MASTERL.PER;
 
 	// Enable CCA for CLOCK0/TAU0
-	//MASTERL.CTRLB |= TC0_CCAEN_bm;
+	MASTERL.CTRLB |= TC0_CCAEN_bm;
 
 	// Enable high-priority interrupt for CCA
-	//MASTERL.INTCTRLB |= TC_CCAINTLVL_HI_gc;
+	MASTERL.INTCTRLB |= TC_CCAINTLVL_HI_gc;
 
 	// Restart Timer
 	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
@@ -87,7 +88,8 @@ void timers_master_init32(volatile uint32_t period_us){
 
 	if (periodhigh > 0) {
 
-		MASTERH.PER = periodhigh;
+		//MASTERH.PER = periodhigh;
+		MASTERH.PER = 1;
 
 		// Select Timer C0 overflow as the source for event channel 0
 		EVSYS.CH0MUX |= EVSYS_CHMUX_TCC0_OVF_gc;
@@ -102,13 +104,13 @@ void timers_master_init32(volatile uint32_t period_us){
 		MASTERH.CTRLD |= 0x58;
 		
 		// Disable overflow interrupt
-		//MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
-		MASTERH.INTCTRLA = TC_OVFINTLVL_HI_gc;
+		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
+		//MASTERH.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 		// Disable CCA for CLOCK0/TAU0 on MASTERL
-		MASTERL.CTRLB &= ~TC0_CCAEN_bm;
+		//MASTERL.CTRLB &= ~TC0_CCAEN_bm;
 		// Disable high-priority interrupt for CCA on MASTERL
-		MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
+		//MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
 
 		//Set CCA = PER so we get a pulse every timer cycle
 		MASTERH.CCA = MASTERH.PER;

@@ -29,10 +29,10 @@ void dma_init(void) {
 	// DMA transfer triggered by Timer overflow interrupt
 	// Select the most significant timer
 	if (MASTERH.PER > 0) {
-		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_OVF_gc;
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCA_gc;
 	}
 	else{
-		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_OVF_gc;
+		DMA.CH0.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCA_gc;
 	}
 
 	// Source: CLOCK0.CCA

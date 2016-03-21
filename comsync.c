@@ -37,31 +37,19 @@
 // The higher peripheral clock (ClkPER4) is required for
 // high-resolution timer operation.
 // ===========================================================
-void configure_system_clock_pll(void) {
+void configure_system_clock(void) {
 	
-	// Use the 32MHz RC oscillator as the PLL clock,
-	// Run the PLL at (32MHz/4) x 16 = 128MHz
-	CLKSYS_PLL_Config( OSC_PLLSRC_RC32M_gc, 16 );
-
 	// Enable 32MHz RC oscillator
 	CLKSYS_Enable( OSC_RC32MEN_bm);
 	while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
 
-	// Enable PLL
-	CLKSYS_Enable( OSC_RC32MEN_bm + OSC_PLLEN_bm ); 
-	while ( CLKSYS_IsReady( OSC_PLLRDY_bm ) == 0 );
-
-	// Set ClkSys prescalers so that:
-	// ClkPER4 = 128MHz
-	// ClkPER2 = 64MHz
-	// ClkPER and ClkCPU = 32MHz
-	CLKSYS_Prescalers_Config( CLK_PSADIV_1_gc, CLK_PSBCDIV_2_2_gc );
+	CLKSYS_Prescalers_Config( CLK_PSADIV_1_gc, CLK_PSBCDIV_1_1_gc );
 
 	// Use PLL as the main clock now that it's configured
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_PLL_gc );
+	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );
 
 	// Disable the other oscillators.
-	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm );
+	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm | OSC_PLLEN_bm );
 	
 }//end of configure_system_clock_pll()
 
@@ -70,7 +58,7 @@ void configure_system_clock_pll(void) {
 // ===========================================================
 ISR(MASTERH_OVF_VECT) // MASTER overflow
 {
-//	PORTE.OUTTGL = 0x08;
+	PORTE.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
 ISR(MASTERL_OVF_VECT) // MASTER overflow
@@ -133,10 +121,10 @@ int main(void)
 	// ClkCPU = 32MHz
 	// ClkPER2 = 64
 	// ClkPER4 = 128MHz
-	configure_system_clock_pll();
+	configure_system_clock();
 
 	// Initialize master clock
-	timers_master_init32(5000);
+	timers_master_init32(2500);
 
 	// Tau0/Master pulse initialization
 /*	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value
