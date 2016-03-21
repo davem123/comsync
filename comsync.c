@@ -70,12 +70,7 @@ void configure_system_clock_pll(void) {
 // ===========================================================
 ISR(MASTERH_OVF_VECT) // MASTER overflow
 {
-//	PORTE.OUTTGL = 0x08;
-}//end of Timer0 ISR
-
-ISR(MASTERL_OVF_VECT) // MASTER overflow
-{
-//	PORTE.OUTTGL = 0x08;
+	PORTE.OUTTGL = 0x08;
 }//end of Timer0 ISR
 
 
@@ -136,7 +131,7 @@ int main(void)
 	configure_system_clock_pll();
 
 	// Initialize master clock
-	timers_master_init32(5000);
+	timers_master_init32(2150);
 
 	// Tau0/Master pulse initialization
 /*	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value

@@ -64,17 +64,17 @@ void timers_master_init32(volatile uint32_t period_us){
 	// Start Timer with no prescaling
 	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1_gc;
 
-	// Enable overflow interrupt
-	MASTERL.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	// Disable overflow interrupt
+	MASTERL.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 	//Set CCA = PER so we get a pulse every timer cycle
-	//MASTERL.CCA = MASTERL.PER;
+	MASTERL.CCA = MASTERL.PER;
 
 	// Enable CCA for CLOCK0/TAU0
-	//MASTERL.CTRLB |= TC0_CCAEN_bm;
+	MASTERL.CTRLB |= TC0_CCAEN_bm;
 
 	// Enable high-priority interrupt for CCA
-	//MASTERL.INTCTRLB |= TC_CCAINTLVL_HI_gc;
+	MASTERL.INTCTRLB |= TC_CCAINTLVL_HI_gc;
 
 	// Restart Timer
 	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
@@ -94,16 +94,9 @@ void timers_master_init32(volatile uint32_t period_us){
 
 		// Start Timer with no prescaling, use event channel 0 as the clock
 		MASTERH.CTRLA = ( MASTERH.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH0_gc;
-
-		// Set event source to event channel 0
-		// Set event action to "externally controlled up/down count"
-		// Delay event source by once cycle to compensate for carry
-		// propagation delay
-		MASTERH.CTRLD |= 0x58;
 		
 		// Disable overflow interrupt
-		//MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
-		MASTERH.INTCTRLA = TC_OVFINTLVL_HI_gc;
+		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
 
 		// Disable CCA for CLOCK0/TAU0 on MASTERL
 		MASTERL.CTRLB &= ~TC0_CCAEN_bm;
