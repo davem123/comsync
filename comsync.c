@@ -56,6 +56,9 @@ void configure_system_clock(void) {
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
+
+volatile uint8_t trigflag = 0;
+
 ISR(MASTERH_OVF_VECT) // MASTER overflow
 {
 //	PORTE.OUTTGL = 0x08;
@@ -75,7 +78,18 @@ ISR(MASTERL_OVF_VECT) // MASTER overflow
 // which triggers a pulse output
 
 ISR(TAU0L_VECT){} // MASTERL.CCA vector
-ISR(TAU1L_VECT){} // MASTERL.CCB vector
+
+// MASTERL.CCB vector
+ISR(TAU1L_VECT){
+
+	if (trigflag >= MASTERH.PER) {
+		trigflag = 0;
+	}
+	else {
+		CLOCK1.CNT = CLOCK1.CCA;
+		trigflag++;
+	}
+}
 ISR(TAU2L_VECT){} // MASTERL.CCC vector
 ISR(TAU3L_VECT){} // MASTERL.CCD vector
 

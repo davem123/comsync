@@ -45,7 +45,7 @@ void dma_init(void) {
 	DMA.CH0.DESTADDR1 = ( ( (uint16_t) CLOCK0_CNT_ADDR) >> 8 ) & 0xFF;
 	DMA.CH0.DESTADDR2 = 0;
 
-
+/*
 	//====================
 	//Tau1 DMA setup
 	//====================
@@ -80,7 +80,7 @@ void dma_init(void) {
 	DMA.CH1.DESTADDR0 = ( ( (uint16_t) CLOCK1_CNT_ADDR) >> 0 ) & 0xFF;
 	DMA.CH1.DESTADDR1 = ( ( (uint16_t) CLOCK1_CNT_ADDR) >> 8 ) & 0xFF;
 	DMA.CH1.DESTADDR2 = 0;
-
+*/
 	//====================
 	//Tau2 DMA setup
 	//====================
