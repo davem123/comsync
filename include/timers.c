@@ -148,7 +148,8 @@ void timers_tau_init(	volatile uint16_t *addr_ccN,
 	
 	volatile uint16_t cca_value;
 	
-	cca_value = ( (float) tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
+	//cca_value = ( (float) tau_us / MAX_PERIOD_MICROSECONDS) * 65534;
+	cca_value = tau_us * F_CPU_MHZ;
 
 	// Resolution (4 counts) = 220ns
 	// (Two least significant bits are not used in hi-res mode)
