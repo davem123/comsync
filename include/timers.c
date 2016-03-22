@@ -45,21 +45,25 @@ void timers_master_init(uint32_t period_us)
 // ===========================================================
 void timers_master_init32(volatile uint32_t period_us){
 
-	volatile uint32_t per_value;
-	volatile uint16_t periodhigh;
-	volatile uint16_t periodlow;
+	volatile uint32_t clock_ticks;
+	volatile uint16_t periodhigh = 0;
+	volatile uint16_t periodlow = 0;
 
-	per_value = period_us * F_CPU_MHZ;
+	clock_ticks = period_us * F_CPU_MHZ;
 
-	periodlow = ((uint32_t) per_value >> 0) & 0x0000FFFF;
-	periodhigh = ((uint32_t) per_value >> 16) & 0x0000FFFF;
+	//periodlow = ((uint32_t) per_value >> 0) & 0x0000FFFF;
+	//periodhigh = ((uint32_t) per_value >> 16) & 0x0000FFFF;
+
+	if (clock_ticks > 0xFFFF) periodhigh = clock_ticks / 0xFFFF;
+	periodlow = clock_ticks / (periodhigh + 1);
+	
 
 	// ===========================================================
 	// LEAST SIGNIFICANT TIMER
 	// Only this timer is needed for periods <= 0x0000FFFF
 	// ===========================================================
-	//MASTERL.PER = periodlow;
-	MASTERL.PER = 0x9C40;
+	MASTERL.PER = periodlow;
+	//MASTERL.PER = 0xBB80;
 	MASTERH.PER = 0;
 
 	// Start Timer with no prescaling
@@ -88,8 +92,8 @@ void timers_master_init32(volatile uint32_t period_us){
 
 	if (periodhigh > 0) {
 
-		//MASTERH.PER = periodhigh;
-		MASTERH.PER = 1;
+		MASTERH.PER = periodhigh;
+		//MASTERH.PER = 1;
 
 		// Select Timer C0 overflow as the source for event channel 0
 		EVSYS.CH0MUX |= EVSYS_CHMUX_TCC0_OVF_gc;
@@ -101,7 +105,7 @@ void timers_master_init32(volatile uint32_t period_us){
 		// Set event action to "externally controlled up/down count"
 		// Delay event source by once cycle to compensate for carry
 		// propagation delay
-		MASTERH.CTRLD |= 0x58;
+		//MASTERH.CTRLD |= 0x58;
 		
 		// Disable overflow interrupt
 		MASTERH.INTCTRLA = TC_OVFINTLVL_OFF_gc;
@@ -124,6 +128,9 @@ void timers_master_init32(volatile uint32_t period_us){
 		// Restart Timer
 		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
 	}
+
+	// Re-initialize DMA in case we switched between low and high timers
+	dma_init();
 
 }//end of timers_master_init32()
 
