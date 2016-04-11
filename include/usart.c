@@ -61,40 +61,6 @@ void usart_rxbyte(uint8_t rxbyte) {
 // ===========================================================
 // Updates the tau1,tau2, and tau3 pulse trigger delays
 // with the values in the parameters[] array
-// ===========================================================
-void usart_update_taus(uint32_t *parameters) {
-
-	volatile uint32_t tau1 = parameters[1];
-	volatile uint32_t tau2 = parameters[2];
-	volatile uint32_t tau3 = parameters[3];
-
-	timers_tau_init(	&MASTERL.CCB,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCBEN_bm,			//Capture channel bitmask
-						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						tau1					//Tau1 (trigger) delay (us)
-					);
-	timers_tau_init(	&MASTERL.CCC,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCCEN_bm,			//Capture channel bitmask
-						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						tau2					//Tau2 (trigger) delay (us)
-					);
-
-	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCDEN_bm,			//Capture channel bitmask
-						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						tau3					//Tau3 (trigger) delay (us)
-					);
-}//end of usart_update_taus()
-
-// ===========================================================
-// Updates the tau1,tau2, and tau3 pulse trigger delays
-// with the values in the parameters[] array
 // 32-bit version
 // ===========================================================
 void usart_update_taus32(uint32_t *parameters) {

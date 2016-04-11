@@ -61,16 +61,7 @@ static const uint8_t TAU3_CCD_bm = 0x80;
 // ===========================================================
 // Function Prototypes
 // ===========================================================
-void timers_master_init(uint32_t period_us);
 void timers_master_init32(uint32_t period_us);
-
-void timers_tau_init(	volatile uint16_t *addr_ccN,
-						volatile uint8_t *addr_ctrlb,
-						volatile uint8_t *addr_intctrlb,
-						uint8_t capture_ch_bm,
-						uint8_t interrupt_level_bm,
-						uint32_t tau_us
-					);
 
 void timers_tau_init32(	uint8_t capture_ch_bm,
 						uint8_t tau_addr_offset,

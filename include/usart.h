@@ -32,10 +32,8 @@ void usart_init(void);
 void usart_rxbyte(uint8_t rxbyte);
 void usart_parsebuffer(void);
 
-void usart_update_taus(uint32_t *parameters);
 void usart_update_taus32(uint32_t *parameters);
 
-void usart_disable_outputs(void);
 void usart_disable_outputs32(void);
 
 #endif
