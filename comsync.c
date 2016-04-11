@@ -56,16 +56,6 @@ void configure_system_clock(void) {
 // ===========================================================
 // INTERRUPT HANDLERS
 // ===========================================================
-ISR(MASTERH_OVF_VECT) // MASTER overflow
-{
-//	PORTE.OUTTGL = 0x08;
-}//end of Timer0 ISR
-
-ISR(MASTERL_OVF_VECT) // MASTER overflow
-{
-//	PORTE.OUTTGL = 0x08;
-}//end of Timer0 ISR
-
 
 // Tau0/Clock0 is the master clock output.
 
@@ -126,39 +116,6 @@ int main(void)
 	// Initialize master clock
 	timers_master_init32(2500);
 
-	// Tau0/Master pulse initialization
-/*	timers_tau_init(	&MASTERL.CCA,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCAEN_bm,			//Capture channel bitmask
-						TC_CCAINTLVL_HI_gc,		//Interrupt level bitmask
-						0						//TauN (trigger) delay (us)
-					);
-
-	// Tau1-3/slave pulses initialization
-	timers_tau_init(	&MASTERL.CCB,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCBEN_bm,			//Capture channel bitmask
-						TC_CCBINTLVL_HI_gc,		//Interrupt level bitmask
-						0						//TauN (trigger) delay (us)
-					);
-	timers_tau_init(	&MASTERL.CCC,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCCEN_bm,			//Capture channel bitmask
-						TC_CCCINTLVL_HI_gc,		//Interrupt level bitmask
-						0						//TauN (trigger) delay (us)
-					);
-
-	timers_tau_init(	&MASTERL.CCD,			//Address of CCP value
-						&MASTERL.CTRLB,			//Address of CTRLB
-						&MASTERL.INTCTRLB,		//Address of INTCTRLB
-						TC0_CCDEN_bm,			//Capture channel bitmask
-						TC_CCDINTLVL_HI_gc,		//Interrupt level bitmask
-						0						//TauN (trigger) delay (us)
-					);
-*/
 /*	timers_tau_init32(	TAU0_CCA_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
 						0						//TauN (trigger) delay (us)
