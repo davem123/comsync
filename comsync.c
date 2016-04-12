@@ -74,6 +74,9 @@ ISR(TAU1H_VECT){} // MASTERH.CCB vector
 ISR(TAU2H_VECT){} // MASTERH.CCC vector
 ISR(TAU3H_VECT){} // MASTERH.CCD vector
 
+ISR(COUNTER1_OVF_VECT){} // COUNTER1 OVF vector
+ISR(COUNTER2_OVF_VECT){} // COUNTER2 OVF vector
+
 ISR(USART_VECT){
 
 	uint8_t rec_char;
@@ -114,7 +117,7 @@ int main(void)
 	configure_system_clock();
 
 	// Initialize master clock
-	timers_master_init32(2500);
+	timers_master_init32(8000);
 
 /*	timers_tau_init32(	TAU0_CCA_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
@@ -126,10 +129,28 @@ int main(void)
 						10						//TauN (trigger) delay (us)
 					 );
 
+	// Set TAU1/CCB as event source for Event Channel 1
+	EVSYS.CH1MUX |= EVSYS_CHMUX_TCC0_CCB_gc;
+
+	// Use Event Channel 1 as clock source for COUNTER1
+	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH1_gc;
+	COUNTER1.PER = MASTERH.PER;
+	COUNTER1.INTCTRLA = TC_OVFINTLVL_HI_gc;
+
+
 	timers_tau_init32(	TAU2_CCC_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU2offset,				//Offset from the address of MASTERx.CTRLA (first register address)
 						20						//TauN (trigger) delay (us)
 					 );
+
+ 	// Set TAU2/CCC as event source for Event Channel 2
+	EVSYS.CH2MUX |= EVSYS_CHMUX_TCC0_CCC_gc;
+
+	// Use Event Channel 2 as clock source for COUNTER2
+	COUNTER2.CTRLA = ( COUNTER2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH2_gc;
+	COUNTER2.PER = MASTERH.PER;
+	COUNTER2.INTCTRLA = TC_OVFINTLVL_HI_gc;
+
 
 	timers_tau_init32(	TAU3_CCD_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU3offset,				//Offset from the address of MASTERx.CTRLA (first register address)

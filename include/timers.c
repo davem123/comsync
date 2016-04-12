@@ -15,7 +15,7 @@
 // ===========================================================
 void timers_master_init32(volatile uint32_t period_us){
 
-	volatile uint32_t clock_ticks;
+	volatile uint32_t clock_ticks = 0;
 	volatile uint16_t periodhigh = 0;
 	volatile uint16_t periodlow = 0;
 
@@ -42,6 +42,7 @@ void timers_master_init32(volatile uint32_t period_us){
 	// Enable overflow interrupt
 	//MASTERL.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
+	// IMPORTANT!!
 	//Set CCA = PER so we get a pulse every timer cycle
 	MASTERL.CCA = MASTERL.PER;
 
@@ -86,6 +87,7 @@ void timers_master_init32(volatile uint32_t period_us){
 		// Disable high-priority interrupt for CCA on MASTERL
 		//MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
 
+		// IMPORTANT!!
 		//Set CCA = PER so we get a pulse every timer cycle
 		MASTERH.CCA = MASTERH.PER;
 
