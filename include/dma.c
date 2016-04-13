@@ -61,16 +61,19 @@ void dma_init(void) {
 
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH1.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
-
-
-	// DMA transfer triggered by COUNTER1 overflow if 32-bit period is > 0x0000FFFF (i.e. >2047us)
-	if (MASTERH.PER > 0) {
-		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCE0_OVF_gc;
+/*
+	// DMA transfer triggered by CCB (TAU1_VECT) interrupt
+	// Select whichever MASTER timer has CCB enabled
+	if (MASTERH.CTRLB & TC0_CCBEN_bm) {
+		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCB_gc;
 	}
-	// DMA transfer triggered by CCB (TAU1_VECT) interrupt if 32-bit period is <= 0x0000FFFF (i.e. <2047us)
-	else if (MASTERH.PER == 0){
+	else if (MASTERL.CTRLB & TC0_CCBEN_bm){
 		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCB_gc;
 	}
+*/
+	
+	// DMA transfer triggered by COUNTER1 overflow
+	DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_TCE0_OVF_gc;
 
 	// Source: CLOCK1.CCA
 	DMA.CH1.SRCADDR0 = ( ( (uint16_t) CLOCK1_CCA_ADDR) >> 0 ) & 0xFF;
@@ -97,15 +100,18 @@ void dma_init(void) {
 
 	// Reload source and destination address after every block, increment source and destination address
 	DMA.CH2.ADDRCTRL = DMA_CH_SRCRELOAD_BLOCK_gc | DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTRELOAD_BLOCK_gc | DMA_CH_DESTDIR_INC_gc;
-
-	// DMA transfer triggered by COUNTER1 overflow if 32-bit period is > 0x0000FFFF (i.e. >2047us)
-	if (MASTERH.PER > 0) {
-		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCF0_OVF_gc;
+/*
+	// DMA transfer triggered by CCC (TAU2_VECT) interrupt
+	// Select whichever MASTER timer has CCC enabled
+	if (MASTERH.CTRLB & TC0_CCCEN_bm) {
+		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCD0_CCC_gc;
 	}
-	// DMA transfer triggered by CCB (TAU1_VECT) interrupt if 32-bit period is <= 0x0000FFFF (i.e. <2047us)
-	else if (MASTERH.PER == 0){
+	else if (MASTERL.CTRLB & TC0_CCCEN_bm){
 		DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCC0_CCC_gc;
 	}
+*/
+	// DMA transfer triggered by COUNTER2 overflow
+	DMA.CH2.TRIGSRC = DMA_CH_TRIGSRC_TCF0_OVF_gc;
 
 	// Source: CLOCK2.CCA
 	DMA.CH2.SRCADDR0 = ( ( (uint16_t) CLOCK2_CCA_ADDR) >> 0 ) & 0xFF;
