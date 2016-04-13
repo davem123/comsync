@@ -83,9 +83,9 @@ void timers_master_init32(volatile uint32_t period_us){
 		//MASTERH.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 		// Disable CCA for CLOCK0/TAU0 on MASTERL
-		//MASTERL.CTRLB &= ~TC0_CCAEN_bm;
+		MASTERL.CTRLB &= ~TC0_CCAEN_bm;
 		// Disable high-priority interrupt for CCA on MASTERL
-		//MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
+		MASTERL.INTCTRLB &= ~TC_CCAINTLVL_HI_gc;
 
 		// IMPORTANT!!
 		//Set CCA = PER so we get a pulse every timer cycle
@@ -100,6 +100,22 @@ void timers_master_init32(volatile uint32_t period_us){
 		// Restart Timer
 		MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
 	}
+
+	// Set TAU1/CCB as event source for Event Channel 1
+	EVSYS.CH1MUX |= EVSYS_CHMUX_TCC0_CCB_gc;
+
+	// Use Event Channel 1 as clock source for COUNTER1
+	COUNTER1.CTRLA = ( COUNTER1.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH1_gc;
+	COUNTER1.PER = MASTERH.PER;
+	COUNTER1.INTCTRLA = TC_OVFINTLVL_HI_gc;
+	
+ 	// Set TAU2/CCC as event source for Event Channel 2
+	EVSYS.CH2MUX |= EVSYS_CHMUX_TCC0_CCC_gc;
+
+	// Use Event Channel 2 as clock source for COUNTER2
+	COUNTER2.CTRLA = ( COUNTER2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH2_gc;
+	COUNTER2.PER = MASTERH.PER;
+	COUNTER2.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
 	// Re-initialize DMA in case we switched between low and high timers
 	dma_init();
