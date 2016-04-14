@@ -26,7 +26,6 @@ void timers_master_init32(volatile uint32_t period_us){
 
 	if (clock_ticks > 0xFFFF) periodhigh = clock_ticks / 0xFFFF;
 	periodlow = clock_ticks / (periodhigh + 1);
-	
 
 	// ===========================================================
 	// LEAST SIGNIFICANT TIMER
@@ -116,6 +115,12 @@ void timers_master_init32(volatile uint32_t period_us){
 	COUNTER2.CTRLA = ( COUNTER2.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_EVCH2_gc;
 	COUNTER2.PER = MASTERH.PER;
 	COUNTER2.INTCTRLA = TC_OVFINTLVL_HI_gc;
+
+	// Restart all timers
+	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
+	MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
+	COUNTER1.CTRLFSET = TC_CMD_RESTART_gc;
+	COUNTER2.CTRLFSET = TC_CMD_RESTART_gc;
 
 	// Re-initialize DMA in case we switched between low and high timers
 	dma_init();
