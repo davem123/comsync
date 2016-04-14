@@ -83,6 +83,8 @@ void timers_init_clock(	volatile uint16_t *addr_per,
 						uint8_t clksel_bm
 					);
 
+void timers_init_all_clocks(void);
+
 void timers_set_pulse_width(volatile uint16_t *addr_cca,
 							volatile uint16_t *addr_per,
 							uint16_t pulse_width

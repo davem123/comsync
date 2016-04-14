@@ -216,6 +216,45 @@ void timers_init_clock	(	volatile uint16_t *addr_per,
 	_SFR_MEM16(addr_ctrld) &= TC_EVACT_OFF_gc;
 }//end of timers_init_clock()
 
+void timers_init_all_clocks(void){
+
+	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER
+							&CLOCK0.CCA,		//Address of CLOCK0.CCA
+							&CLOCK0PIN,			//Address of CLOCK0PIN
+							&CLOCK0.CTRLA,		//Address of CLOCK0.CTRLA
+							&CLOCK0.CTRLB,		//Address of CLOCK0.CTRLB
+							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
+							TC_CLKSEL_DIV8_gc	//Timer prescaler bitmask
+						);
+
+	timers_init_clock	(	&CLOCK1.PER,
+							&CLOCK1.CCA,
+							&CLOCK1PIN,
+							&CLOCK1.CTRLA,
+							&CLOCK1.CTRLB,
+							&CLOCK1.CTRLD,
+							TC_CLKSEL_DIV8_gc
+						);
+
+	timers_init_clock	(	&CLOCK2.PER,
+							&CLOCK2.CCA,
+							&CLOCK2PIN,
+							&CLOCK2.CTRLA,
+							&CLOCK2.CTRLB,
+							&CLOCK2.CTRLD,
+							TC_CLKSEL_DIV8_gc
+						);
+
+	timers_init_clock	(	&CLOCK3.PER,
+							&CLOCK3.CCA,
+							&CLOCK3PIN,
+							&CLOCK3.CTRLA,
+							&CLOCK3.CTRLB,
+							&CLOCK3.CTRLD,
+							TC_CLKSEL_DIV8_gc
+						);
+}
+
 // ===========================================================
 // Update the PER and CCA registers of the specified clock's
 // timer, to set the pulse width of the specified clock signal
