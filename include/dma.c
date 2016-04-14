@@ -7,8 +7,14 @@
 
 void dma_init(void) {
 
+	// Wait for the DMA controller to finish whatever it's doing
+	while (DMA.STATUS != 0);
+
 	// Disable the DMA controller while configuring
 	DMA.CTRL &= ~DMA_ENABLE_bm;
+
+	// Reset the DMA controller. Clears all registers.
+	DMA.CTRL |= DMA_RESET_bm;
 
 	//====================
 	//Tau0 DMA setup

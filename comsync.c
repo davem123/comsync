@@ -117,7 +117,7 @@ int main(void)
 	configure_system_clock();
 
 	// Initialize master clock
-	timers_master_init32(11000);
+	timers_master_init32(9000);
 
 /*	timers_tau_init32(	TAU0_CCA_bm,			//CCP channel bitmask for MASTERx.CTRLB
 						TAU0offset,				//Offset from the address of MASTERx.CTRLA (first register address)
@@ -138,58 +138,24 @@ int main(void)
 						TAU3offset,				//Offset from the address of MASTERx.CTRLA (first register address)
 						30						//TauN (trigger) delay (us)
 					 );
-				 	
-	timers_init_clock	(	&CLOCK0.PER,		//Address of CLOCK0.PER
-							&CLOCK0.CCA,		//Address of CLOCK0.CCA
-							&CLOCK0PIN,			//Address of CLOCK0PIN
-							&CLOCK0.CTRLA,		//Address of CLOCK0.CTRLA
-							&CLOCK0.CTRLB,		//Address of CLOCK0.CTRLB
-							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
-							TC_CLKSEL_DIV8_gc	//Timer prescaler bitmask
-						);
 
-	timers_init_clock	(	&CLOCK1.PER,
-							&CLOCK1.CCA,
-							&CLOCK1PIN,
-							&CLOCK1.CTRLA,
-							&CLOCK1.CTRLB,
-							&CLOCK1.CTRLD,
-							TC_CLKSEL_DIV8_gc
-						);
-
-	timers_init_clock	(	&CLOCK2.PER,
-							&CLOCK2.CCA,
-							&CLOCK2PIN,
-							&CLOCK2.CTRLA,
-							&CLOCK2.CTRLB,
-							&CLOCK2.CTRLD,
-							TC_CLKSEL_DIV8_gc
-						);
-
-	timers_init_clock	(	&CLOCK3.PER,
-							&CLOCK3.CCA,
-							&CLOCK3PIN,
-							&CLOCK3.CTRLA,
-							&CLOCK3.CTRLB,
-							&CLOCK3.CTRLD,
-							TC_CLKSEL_DIV8_gc
-						);
+	timers_init_all_clocks();
 
 	timers_set_pulse_width(	&CLOCK0.CCA,
 							&CLOCK0.PER,
-							1000);
+							200);
 								
 	timers_set_pulse_width(	&CLOCK1.CCA,
 							&CLOCK1.PER,
-							1000);	
+							200);	
 
 	timers_set_pulse_width(	&CLOCK2.CCA,
 							&CLOCK2.PER,
-							1000);	
+							200);	
 
 	timers_set_pulse_width(	&CLOCK3.CCA,
 							&CLOCK3.PER,
-							1000);	
+							200);	
 
 	//Initialize USART
 	usart_init();
