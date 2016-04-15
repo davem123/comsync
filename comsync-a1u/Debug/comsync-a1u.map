@@ -1074,7 +1074,7 @@ END GROUP
  .debug_frame   0x0000010c       0xc4 src/include/usart.o
  .debug_frame   0x000001d0      0x1a4 src/main.o
 
-.debug_str      0x00000000    0x2ed59
+.debug_str      0x00000000    0x2ed92
  *(.debug_str)
  .debug_str     0x00000000    0x1da2d src/include/delays.o
                               0x1df5d (size before relaxing)
@@ -1084,8 +1084,8 @@ END GROUP
                               0x1f82a (size before relaxing)
  .debug_str     0x0001ffab      0x7ae src/include/usart.o
                               0x1eef5 (size before relaxing)
- .debug_str     0x00020759     0xe600 src/main.o
-                              0x2ce9a (size before relaxing)
+ .debug_str     0x00020759     0xe639 src/main.o
+                              0x2ce8c (size before relaxing)
 
 .debug_loc      0x00000000      0x916
  *(.debug_loc)
