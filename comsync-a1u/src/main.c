@@ -1,19 +1,19 @@
-#include <avr/io.h> 
-#include <avr/interrupt.h>
-#include <util/delay.h>
-
-#define DEBUG
-
 // Set CPU frequency = 32MHz
 #ifndef F_CPU
 	#define F_CPU 32000000UL
 #endif
 
+//#include <avr/io.h> 
+#include <asf.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
 // ATXMega_A1-Xplained board description
-#include "include/board.h"
+//#include "include/board.h"
+#include <board.h>
 
 // Include Clock system driver from application note AVR1003
-#include "include/clksys_driver.h"
+//#include "../include/clksys_driver.h"
 
 // Include delay functions
 #include "include/delays.h"
@@ -30,26 +30,31 @@
 // ===========================================================
 // SYSTEM CLOCK
 //
-// Configures the system clock and the built-in PLL.
-// Using the PLL as the main clock source enables some
-// peripherals to run at a higher speed than the CPU.
-//
-// The higher peripheral clock (ClkPER4) is required for
-// high-resolution timer operation.
+// Configures the system clock for 32MHz operation
 // ===========================================================
+void configure_system_clock(void);
+
 void configure_system_clock(void) {
 	
-	// Enable 32MHz RC oscillator
-	CLKSYS_Enable( OSC_RC32MEN_bm);
-	while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
+	//Disable "configuration change protection"
+	CCP = CCP_IOREG_gc;
+	
+	//Enable the 32MHz RC oscillator
+	OSC.CTRL |= OSC_RC32MEN_bm;
+	
+	//Wait until the 32MHz oscillator is ready
+	while(!(OSC.STATUS & OSC_RC32MRDY_bm));
 
-	CLKSYS_Prescalers_Config( CLK_PSADIV_1_gc, CLK_PSBCDIV_1_1_gc );
+	//Disable "configuration change protection"
+	CCP = CCP_IOREG_gc;
 
-	// Use PLL as the main clock now that it's configured
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );
-
-	// Disable the other oscillators.
-	CLKSYS_Disable( OSC_RC2MEN_bm | OSC_RC32KEN_bm | OSC_PLLEN_bm );
+	//SELECT 32MHZ OSC FOR SYSTEM CLOCK.
+	CLK.CTRL = CLK_SCLKSEL_RC32M_gc;
+	
+	//Disable "configuration change protection"
+	CCP = CCP_IOREG_gc;
+	//Disable the other oscillators
+	OSC.CTRL &= ~(OSC_RC2MEN_bm | OSC_RC32KEN_bm | OSC_PLLEN_bm);
 	
 }//end of configure_system_clock_pll()
 
@@ -106,8 +111,8 @@ int main(void)
 	PORTF.DIR = 0xFF; //All outputs
 	PORTF.OUT = 0x00;
 
-	LEDPORT.DIR = 0xFF; //All outputs
-	LEDPORT.OUT = 0xFF; //Default off for LED
+//	LEDPORT.DIR = 0xFF; //All outputs
+//	LEDPORT.OUT = 0xFF; //Default off for LED
 
 	// Configure System Clock using the PLL for a faster
 	// peripheral clock
