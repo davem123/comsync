@@ -119,6 +119,7 @@ void timers_master_init32(volatile uint32_t period_us){
 	// Restart all timers
 	MASTERL.CTRLFSET = TC_CMD_RESTART_gc;
 	MASTERH.CTRLFSET = TC_CMD_RESTART_gc;
+	
 	COUNTER1.CTRLFSET = TC_CMD_RESTART_gc;
 	COUNTER2.CTRLFSET = TC_CMD_RESTART_gc;
 
@@ -231,6 +232,7 @@ void timers_init_all_clocks(void){
 							&CLOCK0.CTRLD,		//Address of CLOCK0.CTRLD
 							TC_CLKSEL_DIV8_gc	//Timer prescaler bitmask
 						);
+	CLOCK0.CTRLFSET = TC_CMD_RESTART_gc;
 
 	timers_init_clock	(	&CLOCK1.PER,
 							&CLOCK1.CCA,
@@ -240,6 +242,7 @@ void timers_init_all_clocks(void){
 							&CLOCK1.CTRLD,
 							TC_CLKSEL_DIV8_gc
 						);
+	CLOCK0.CTRLFSET = TC_CMD_RESTART_gc;
 
 	timers_init_clock	(	&CLOCK2.PER,
 							&CLOCK2.CCA,
@@ -249,6 +252,7 @@ void timers_init_all_clocks(void){
 							&CLOCK2.CTRLD,
 							TC_CLKSEL_DIV8_gc
 						);
+	CLOCK0.CTRLFSET = TC_CMD_RESTART_gc;
 
 	timers_init_clock	(	&CLOCK3.PER,
 							&CLOCK3.CCA,
@@ -258,6 +262,8 @@ void timers_init_all_clocks(void){
 							&CLOCK3.CTRLD,
 							TC_CLKSEL_DIV8_gc
 						);
+	CLOCK0.CTRLFSET = TC_CMD_RESTART_gc;
+
 }
 
 // ===========================================================
