@@ -3,17 +3,20 @@
 
 #include "avr_compiler.h"
 #include "delays.h"
+#include <board.h>
 
 #define USBCOM
 //#define J1COM
+
+#define LEDPORT PORTQ
 
 // ===========================================================
 // USART config macros
 // ===========================================================
 #ifdef USBCOM
-	#define USART			USARTC0				//use for USB-Virtual COM Port
-	#define USART_PORT		PORTC				//use for USB-Virtual COM Port
-	#define USART_VECT		USARTC0_RXC_vect	//use for USB-Virtual COM Port
+	#define USART			USARTE0				//use for USB-Virtual COM Port
+	#define USART_PORT		PORTE				//use for USB-Virtual COM Port
+	#define USART_VECT		USARTE0_RXC_vect	//use for USB-Virtual COM Port
 #endif
 
 #ifdef J1COM
@@ -35,5 +38,7 @@ void usart_parsebuffer(void);
 void usart_update_taus32(uint32_t *parameters);
 
 void usart_disable_outputs32(void);
+
+void usart_update_pulsewidths(uint32_t *parameters);
 
 #endif

@@ -1,5 +1,4 @@
 #include "usart.h"
-#include "board.h"
 #include "timers.h"
 #include <string.h>
 
@@ -84,15 +83,6 @@ void usart_update_taus32(uint32_t *parameters) {
 					);
 
 }//end of usart_update_taus()
-
-// ===========================================================
-// Turns off all of the pulse outputs, including the master
-// ===========================================================
-void usart_disable_outputs(void) {
-	
-	MASTERL.CTRLA = ( MASTERL.CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_OFF_gc;
-
-}
 
 // ===========================================================
 // Turns off all of the pulse outputs, including the master
