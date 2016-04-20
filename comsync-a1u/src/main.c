@@ -33,7 +33,6 @@
 // Configures the system clock for 32MHz operation
 // ===========================================================
 void configure_system_clock(void);
-
 void configure_system_clock(void) {
 	
 	//Disable "configuration change protection"
@@ -108,6 +107,9 @@ int main(void)
 	PORTD.DIR = 0xFF; //All outputs
 	PORTD.OUT = 0x00;
 	
+	PORTE.DIR = 0xFF; //All outputs
+	PORTE.OUT = 0x00;
+	
 	PORTF.DIR = 0xFF; //All outputs
 	PORTF.OUT = 0x00;
 
@@ -148,19 +150,19 @@ int main(void)
 
 	timers_set_pulse_width(	&CLOCK0.CCA,
 							&CLOCK0.PER,
-							200);
+							100);
 								
 	timers_set_pulse_width(	&CLOCK1.CCA,
 							&CLOCK1.PER,
-							200);	
+							100);	
 
 	timers_set_pulse_width(	&CLOCK2.CCA,
 							&CLOCK2.PER,
-							200);	
+							100);	
 
 	timers_set_pulse_width(	&CLOCK3.CCA,
 							&CLOCK3.PER,
-							200);	
+							100);	
 
 	//Initialize USART
 	usart_init();
