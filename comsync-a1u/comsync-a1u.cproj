@@ -252,9 +252,6 @@
     <Compile Include="src\include\avr_compiler.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\include\board.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\include\delays.c">
       <SubType>compile</SubType>
     </Compile>
